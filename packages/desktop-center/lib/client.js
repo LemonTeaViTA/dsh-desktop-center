@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.5';
+    const CLIENT_VERSION = '0.3.0-rc.6';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -90,7 +90,7 @@ window.__ModuleLoader__.load({
       return h('div', { className: 'sdc-empty' },
         h('strong', null, title), h('p', { className: 'sdc-muted' }, subtitle));
     }
-    function Card({ desktop }) {
+    function Card({ desktop, onOpen }) {
       const state = statusInfo(desktop.status);
       const roots = desktop.skillRoots || [];
       return h('article', { className: 'sdc-card' },
@@ -104,7 +104,9 @@ window.__ModuleLoader__.load({
             h('span', { className: 'sdc-path' }, h('span', { className: 'sdc-ind', 'data-on': String(root.exists) }), root.path, root.scope === 'shared' ? '（共享）' : ''),
             h('span', { className: 'sdc-muted' }, root.exists ? '已发现' : '不存在'))),
           ...(desktop.appPaths.length === 0 && roots.length === 0 ? [h('li', { key: 'none', className: 'sdc-muted' }, '尚无已验证的配置路径')] : [])),
-        ...(desktop.notes || []).map((note, i) => h('p', { key: i, className: 'sdc-muted', style: { marginTop: 10 } }, note)));
+        ...(desktop.notes || []).map((note, i) => h('p', { key: i, className: 'sdc-muted', style: { marginTop: 10 } }, note)),
+        h('button', { type: 'button', className: 'sdc-btn', style: { marginTop: 12 },
+          'aria-label': '查看 ' + desktop.label + ' 详情', onClick: onOpen }, '查看详情'));
     }
     const skillIssueLabels = {
       HIDDEN_CONTENT_UNVERIFIED: '隐藏文件未参与比较',
@@ -115,7 +117,7 @@ window.__ModuleLoader__.load({
       EACCES: '没有读取权限',
       EPERM: '系统阻止了读取',
     };
-    function SkillsList({ desktops, search }) {
+    function SkillsList({ desktops, search, showDesktop = true }) {
       const groups = desktops.map(desktop => ({
         desktop,
         skills: desktop.skills.filter(skill =>
@@ -131,7 +133,7 @@ window.__ModuleLoader__.load({
           : '当前未覆盖此应用的 Skills 路径。';
         return h('section', { key: desktop.id, className: 'sdc-skill-group', 'aria-labelledby': headingId },
           h('div', { className: 'sdc-skill-heading' },
-            h('h2', { id: headingId }, desktop.label),
+            h('h2', { id: headingId }, showDesktop ? desktop.label : 'Skills'),
             skills.length ? h('span', { className: 'sdc-muted' }, skills.length + ' 条记录') : null),
           skills.length ? h('ul', { className: 'sdc-skill-list' }, ...skills.map(skill => {
             const issues = desktop.diagnostics.filter(issue =>
@@ -139,6 +141,8 @@ window.__ModuleLoader__.load({
             const incomplete = skill.fingerprintStatus !== 'complete';
             return h('li', { key: skill.file, className: 'sdc-skill-item' },
               h('h3', null, skill.name),
+              !showDesktop && skill.scope === 'shared'
+                ? h('p', { className: 'sdc-muted' }, '共享 Skills 目录') : null,
               h('p', { className: 'sdc-muted' }, skill.description?.trim() || '暂无简介'),
               incomplete || issues.length ? h('details', null,
                 h('summary', null, incomplete ? '部分内容无法比较' : '查看扫描异常'),
@@ -169,6 +173,21 @@ window.__ModuleLoader__.load({
         h('tbody', null, ...filtered.map((d,i) => h('tr', { key: String(i) },
           h('td', null, d.desktop), h('td', null, d.skill || d.root || '—'), h('td', null, d.reason))))));
     }
+    function McpList({ mcp }) {
+      const messages = {
+        missing: '未找到 Codex 的用户配置文件。',
+        unreadable: '无法读取或解析 Codex 的用户配置。',
+      };
+      return h('section', { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-mcp-heading' },
+        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-mcp-heading' }, 'MCP')),
+        !mcp ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的 MCP 配置。') :
+        mcp.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[mcp.status]) :
+        mcp.servers.length === 0 ? h('p', { className: 'sdc-muted' }, '用户配置中没有 MCP 服务。') :
+        h('ul', { className: 'sdc-skill-list' }, ...mcp.servers.map(server =>
+          h('li', { className: 'sdc-skill-item', key: server.name },
+            h('div', { className: 'sdc-skill-heading' }, h('h3', null, server.name),
+              h('span', { className: 'sdc-muted' }, server.enabled ? '已配置' : '配置中已停用'))))));
+    }
     function Dashboard() {
       const [overview, setOverview] = React.useState(null);
       const [comparison, setComparison] = React.useState(null);
@@ -176,6 +195,16 @@ window.__ModuleLoader__.load({
       const [error, setError] = React.useState('');
       const [tab, setTab] = React.useState('desktops');
       const [search, setSearch] = React.useState('');
+      const [desktopId, setDesktopId] = React.useState(null);
+      const viewport = React.useRef(null);
+      const detailHeading = React.useRef(null);
+      const desktop = overview?.desktops.find(item => item.id === desktopId);
+      React.useEffect(() => {
+        if (desktopId) {
+          detailHeading.current?.focus();
+          if (viewport.current) viewport.current.scrollTop = 0;
+        }
+      }, [desktopId]);
       const refreshId = React.useRef(0);
       React.useEffect(attachStyle, []);
       const reload = React.useCallback(async () => {
@@ -200,7 +229,7 @@ window.__ModuleLoader__.load({
       const stat = overview?.summary;
       const tabs = [['desktops','桌面应用'],['skills','Skills 清单'],['diff','跨端差异'],['diagnostics','诊断']];
       return h('div', { className: 'sdc-panel' },
-        h('div', { className: 'sdc-viewport', tabIndex: 0, role: 'region', 'aria-label': 'Desktop Center 滚动区域' },
+        h('div', { className: 'sdc-viewport', ref: viewport, tabIndex: 0, role: 'region', 'aria-label': 'Desktop Center 滚动区域' },
           h('main', { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
             h('header', { className: 'sdc-hero' },
               h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
@@ -217,18 +246,25 @@ window.__ModuleLoader__.load({
             h('div', { className: 'sdc-toolbar' },
               h('div', { className: 'sdc-tabs', role: 'tablist', 'aria-label': '选择管理视图' },
                 ...tabs.map(([key,label]) => h('button', { type: 'button', key, role: 'tab', className: 'sdc-tab',
-                  'aria-selected': tab === key, onClick: () => { setTab(key); setSearch(''); } }, label))),
+                  'aria-selected': tab === key, onClick: () => { setTab(key); setDesktopId(null); setSearch(''); } }, label))),
               h('div', { className: 'sdc-actions' },
                 h('input', { className: 'sdc-field', type: 'search', value: search, onChange: e => setSearch(e.target.value),
-                  'aria-label': '搜索当前视图', placeholder: tab === 'skills' ? '搜索名称、简介或 Desktop' : '搜索...' }),
+                  'aria-label': '搜索当前视图', placeholder: desktop ? '搜索此应用的 Skills' : tab === 'skills' ? '搜索名称、简介或 Desktop' : '搜索...' }),
                 h('button', { type: 'button', className: 'sdc-btn', disabled: loading,
                   onClick: () => { void reload(); } }, loading ? '扫描中…' : '重新扫描'))),
             error ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error) : null,
             overview && overview.platform !== 'darwin' ? h('div', { className: 'sdc-alert' }, '当前 Host 不是 macOS，只提供有限的兼容性信息。') : null,
             loading && !overview ? h(Empty, { title: '正在扫描本地 Desktop', subtitle: '仅读取已知的应用与 Skills 路径，不会更改任何配置。' }) : null,
-            !overview ? null : tab === 'desktops' ?
+            !overview ? null : desktop ?
+              h('section', { className: 'sdc-pane', 'aria-labelledby': 'sdc-detail-heading' },
+                h('div', { className: 'sdc-pane-title' },
+                  h('button', { type: 'button', className: 'sdc-btn', onClick: () => { setDesktopId(null); setSearch(''); } }, '返回桌面应用'),
+                  h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label)),
+                !query ? h(McpList, { mcp: desktop.mcp }) : null,
+                h(SkillsList, { desktops: [desktop], search: query, showDesktop: false })) :
+            tab === 'desktops' ?
               h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
-                ...matching.map(d => h(Card, { key: d.id, desktop: d })),
+                ...matching.map(d => h(Card, { key: d.id, desktop: d, onOpen: () => { setDesktopId(d.id); setSearch(''); } })),
                 ...(matching.length ? [] : [h(Empty, { key: 'empty', title: '没有匹配的应用', subtitle: '尝试其他关键词。' })])) :
               h('section', { className: 'sdc-pane' },
                 h('div', { className: 'sdc-pane-title' }, tab === 'skills' ? 'Skills 资源清单' : tab === 'diff' ? '跨 Desktop Skill 包对比' : '安全诊断'),

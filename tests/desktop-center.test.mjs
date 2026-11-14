@@ -63,7 +63,9 @@ test('overview reports real scan statistics but does not treat config dirs as ru
         return fs.stat(file);
       } },
     });
-    const center = createDesktopCenter({ registry, hub: createSkillsHub({ registry, scanOptions: { home } }), platform: 'darwin' });
+    const center = createDesktopCenter({ registry, hub: createSkillsHub({ registry, scanOptions: { home } }),
+      platform: 'darwin', readMcp: async () => ({ status: 'missing', servers: [] }),
+    });
     const overview = await center.overview();
     assert.equal(overview.summary.desktopCount, 5);
     assert.equal(overview.summary.installedAppCount, 0);

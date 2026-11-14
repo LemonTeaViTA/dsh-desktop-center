@@ -5,11 +5,12 @@
  * their single-install entry point; no Desktop settings are written.
  */
 import { createDesktopRegistry } from './registry/service.js';
+import { readCodexMcp } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.5';
+export const VERSION = '0.3.0-rc.6';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
@@ -20,7 +21,7 @@ const noCache = { 'cache-control': 'no-store', 'x-content-type-options': 'nosnif
 const json = (payload, status = 200) => Response.json(payload, { status, headers: noCache });
 
 /** Inject dependencies for deterministic tests; no external process launched. */
-export function createDesktopCenter({ registry = createDesktopRegistry(), hub, platform = process.platform } = {}) {
+export function createDesktopCenter({ registry = createDesktopRegistry(), hub, platform = process.platform, readMcp = readCodexMcp } = {}) {
   const skillsHub = hub ?? createSkillsHub({ registry });
   return Object.freeze({
     version: 1,
@@ -28,12 +29,16 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
     skillsHub,
     async overview() {
       const inventory = await skillsHub.inventory();
+      const desktops = await Promise.all(inventory.desktops.map(async desktop =>
+        platform === 'darwin' && desktop.id === 'codex-desktop'
+          ? { ...desktop, mcp: await readMcp() }
+          : desktop));
       return {
         version: VERSION,
         scannedAt: inventory.scannedAt,
         platform,
         readOnly: true,
-        desktops: inventory.desktops,
+        desktops,
         summary: {
           desktopCount: inventory.desktops.length,
           installedAppCount: inventory.desktops.filter(item => item.appPaths.length > 0).length,

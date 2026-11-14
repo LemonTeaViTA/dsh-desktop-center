@@ -37,6 +37,7 @@ export interface DesktopCenterOverviewV1 {
   readOnly: true;
   desktops: Array<DesktopRecord & {
     skills: SkillRecord[];
+    mcp?: { status: 'read' | 'missing' | 'unreadable'; servers: Array<{ name: string; enabled: boolean }> };
     diagnostics: Array<{root: string; reason: string; skill?: string}>;
   }>;
   summary: { desktopCount: number; installedAppCount: number; skillOccurrences: number; diagnosticCount: number };

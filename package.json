@@ -1,6 +1,6 @@
 {
   "name": "dsh-desktop-center-workspace",
-  "version": "0.3.0-rc.5",
+  "version": "0.3.0-rc.6",
   "private": true,
   "type": "module",
   "description": "DSH Desktop Center V0.3 single-install bundle, source modules, governance and tests",
@@ -19,7 +19,8 @@
     "eslint": "9.39.1",
     "globals": "16.4.0",
     "prettier": "3.6.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "@iarna/toml": "2.2.5"
   },
   "engines": {
     "node": ">=20"
