@@ -47,7 +47,7 @@ flowchart TD
 |---|---|---|
 | Qoder 国际版 | `~/.qoder/skills`、共享 `~/.agents/skills` | 需按实际 Desktop 版本验证 |
 | Qoder CN | `~/.qoder-cn/skills`、共享 `~/.agents/skills` | 与国际版分开识别 |
-| WorkBuddy | 未确认 | 不能套用 CodeBuddy 的目录 |
+| WorkBuddy | `~/.workbuddy/skills` | 独立用户目录 |
 | Trae | `~/.trae/skills` | CN 版需独立核对 |
 | Codex Desktop | `~/.agents/skills`、旧版 `~/.codex/skills` | 共享目录不代表已在应用 UI 启用 |
 

@@ -30,7 +30,7 @@ test('skills hub scans Skill packages, diffs content and reports unsupported Wor
     assert.equal(frontend.status, 'different');
     assert.equal(frontend.byDesktopStatus['qoder-global'], 'different');
     assert.equal(frontend.byDesktopStatus['qoder-cn'], 'different');
-    assert.equal(frontend.byDesktopStatus['workbuddy'], 'unknown');
+    assert.equal(frontend.byDesktopStatus['workbuddy'], 'missing');
     const shared = result.matrix.find((x) => x.name === 'shared-review');
     assert.equal(shared.byDesktopStatus['codex-desktop'], 'same');
   } finally { await fs.rm(home, { recursive: true, force: true }); }

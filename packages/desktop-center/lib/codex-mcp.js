@@ -48,6 +48,17 @@ async function readMcpConfig(file, selectServers, getEnabled) {
   return { status, servers: entries };
 }
 
+export function readCodexPlugins(file) {
+  return readConfig(file, text => {
+    const { plugins = {} } = TOML.parse(text);
+    if (!plugins || typeof plugins !== 'object' || Array.isArray(plugins)) throw new Error('Invalid plugins');
+    return Object.entries(plugins).map(([name, config]) => {
+      if (typeof config?.enabled !== 'boolean') throw new Error('Invalid plugin enablement');
+      return { name, enabled: config.enabled };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  });
+}
+
 export function readQoderPlugins(file) {
   return readConfig(file, text => {
     const { version, plugins } = JSON.parse(text);

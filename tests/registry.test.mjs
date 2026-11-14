@@ -24,7 +24,7 @@ test('registry distinguishes app installation from config-only and unsupported O
       filesystem: fixtureFilesystem,
     });
     const desktops = await registry.listDesktops();
-    assert.equal(desktops.length, 7);
+    assert.equal(desktops.length, 8);
     for (const id of ['zcode', 'doubao']) {
       const desktop = desktops.find(item => item.id === id);
       assert.equal(desktop.status, 'not-detected');
@@ -32,7 +32,7 @@ test('registry distinguishes app installation from config-only and unsupported O
     }
     assert.equal(desktops.find((x) => x.id === 'qoder-global').status, 'configuration-found');
     assert.equal(desktops.find((x) => x.id === 'workbuddy').status, 'not-detected');
-    assert.equal(desktops.find((x) => x.id === 'workbuddy').skillRoots.length, 0);
+    assert.equal(desktops.find((x) => x.id === 'workbuddy').skillRoots.length, 1);
     assert.equal((await createDesktopRegistry({ home, platform: 'linux' }).listDesktops())[0].status, 'unsupported-os');
   } finally { await fs.rm(home, { recursive: true, force: true }); }
 });

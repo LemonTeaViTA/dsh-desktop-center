@@ -24,14 +24,18 @@ export const DESKTOP_CATALOG = Object.freeze([
   {
     id: 'workbuddy', label: 'WorkBuddy',
     appNames: ['WorkBuddy.app'],
-    skillRoots: [], // Unverified: never guess that ~/.codebuddy belongs to WorkBuddy.
-    note: 'WorkBuddy Skills path is not verified; configure a verified adapter later.',
+    skillRoots: [{ relative: '.workbuddy/skills', scope: 'user', evidence: 'community' }],
   },
   {
     id: 'trae', label: 'Trae Desktop',
     appNames: ['Trae.app', 'TRAE.app'],
     skillRoots: [{ relative: '.trae/skills', scope: 'user', evidence: 'official' }],
-    note: 'Trae CN has a separate global path and requires its own future profile.',
+  },
+  {
+    id: 'trae-cn', label: 'Trae 国内版',
+    appNames: ['Trae CN.app'],
+    bundleIds: { 'Trae CN.app': 'cn.trae.app' },
+    skillRoots: [{ relative: '.trae-cn/skills', scope: 'user', evidence: 'local' }],
   },
   {
     id: 'codex-desktop', label: 'Codex Desktop',

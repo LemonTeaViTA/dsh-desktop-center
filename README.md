@@ -4,7 +4,7 @@
 
 本仓库只有一个当前产品：**DSH Desktop Center**。它不是 SuperAgent，不负责任务编排、桌面远程控制、自动签到、积分领取、Skills 安装或 MCP / 原生插件管理。这些若开发，应成为独立项目或独立插件，不属于此仓库的功能承诺。
 
-> 当前版本 **v0.3.0-rc.10（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.10 接入 ZCode 用户级 Skills 和 MCP，并说明 Skills 比较受限的原因。
+> 当前版本 **v0.3.0-rc.11（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.11 补充 WorkBuddy 和 Codex 覆盖，并改进 Skills 扫描。
 
 ## 已有功能
 
@@ -15,11 +15,11 @@
 | Skills Comparison | 按 Desktop 展示 Skills 差异和 `unknown` 状态 | 对无法验证的文件不报告为一致 |
 | Desktop Center 面板 | DSH 侧边栏入口、四个只读标签、搜索、刷新和扫描诊断 | UI 注册只完成离线模拟测试，尚未 Mac 实机验收 |
 
-WorkBuddy 的实际 Skills 路径尚未核实，显示未确定而不是虚构数据。只对 Desktop 本地配置作只读发现；不将 CLI 视为 Desktop 应用的替代。
+WorkBuddy 扫描独立的用户 Skills 目录。只对 Desktop 本地配置作只读发现；不将 CLI 视为 Desktop 应用的替代。
 
 ## 安装（待实机验证）
 
-- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.10.tgz`
+- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.11.tgz`
 - **目录安装：** `packages/desktop-center/`（首次建议通过 DSH 官方插件管理器/Creator `plugin_manager install_bundle` 使用本地目录）
 - **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
 - **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。

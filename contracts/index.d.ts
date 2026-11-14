@@ -1,5 +1,5 @@
 /** Proposed versioned public contracts. No UI or transport implied. */
-export type DesktopId = 'qoder-global' | 'qoder-cn' | 'workbuddy' | 'trae' | 'codex-desktop' | 'zcode' | 'doubao';
+export type DesktopId = 'qoder-global' | 'qoder-cn' | 'workbuddy' | 'trae' | 'trae-cn' | 'codex-desktop' | 'zcode' | 'doubao';
 export type DesktopDetection = 'app-found' | 'configuration-found' | 'not-detected' | 'unsupported-os';
 export interface SkillRoot { path: string; scope: 'user'|'shared'|'legacy'|'configured'; evidence: string; exists: boolean; error?: string }
 export interface DesktopRecord {
@@ -37,7 +37,7 @@ export interface DesktopCenterOverviewV1 {
   readOnly: true;
   desktops: Array<DesktopRecord & {
     skills: SkillRecord[];
-    plugins?: { status: 'read' | 'missing' | 'unreadable'; entries: Array<{ name: string; version?: string }> };
+    plugins?: { status: 'read' | 'missing' | 'unreadable'; entries: Array<{ name: string; version?: string; enabled?: boolean }> };
     mcp?: { status: 'read' | 'missing' | 'unreadable'; servers: Array<{ name: string; enabled?: boolean }> };
     diagnostics: Array<{root: string; reason: string; skill?: string}>;
   }>;

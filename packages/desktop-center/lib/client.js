@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.10';
+    const CLIENT_VERSION = '0.3.0-rc.11';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -162,7 +162,8 @@ window.__ModuleLoader__.load({
             const s = r.byDesktopStatus[d.id] || 'unknown';
             const scanFailed = d.skillRoots?.some(root => root.error) || d.diagnostics?.some(issue => !issue.skill);
             const label = s !== 'unknown' ? status[s] || s :
-              !d.skillRoots?.length ? '未覆盖 Skills' : scanFailed ? '扫描不完整' : '包内容未完整核验';
+              !d.skillRoots?.length ? '未覆盖 Skills' : scanFailed ? '扫描不完整' :
+              r.byDesktop?.[d.id]?.length ? '包内容未完整核验' : '未能确认此 Skill';
             return h('td', { key: d.id }, h(Pill, { label,
               tone: s === 'same' ? 'good' : s === 'different' || s === 'conflict' ? 'warn' : 'muted' }));
           }))))));
@@ -191,20 +192,21 @@ window.__ModuleLoader__.load({
             h('div', { className: 'sdc-skill-heading' }, h('h3', null, server.name),
               h('span', { className: 'sdc-muted' }, server.enabled === false ? '配置中已停用' : '已配置'))))));
     }
-    function PluginList({ plugins }) {
+    function PluginList({ plugins, configured }) {
       const messages = {
         missing: '未找到此应用的用户插件登记文件。',
         unreadable: '无法读取或识别此应用的插件登记格式。',
       };
       return h('section', { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-plugin-heading' },
-        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading' }, '用户插件')),
+        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading' }, configured ? '用户插件配置' : '用户插件')),
         !plugins ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的插件清单。') :
         plugins.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[plugins.status]) :
-        !plugins.entries.length ? h('p', { className: 'sdc-muted' }, '没有用户插件安装记录。') :
+        !plugins.entries.length ? h('p', { className: 'sdc-muted' }, configured ? '没有用户插件配置记录。' : '没有用户插件安装记录。') :
         h('ul', { className: 'sdc-skill-list' }, ...plugins.entries.map((entry, index) =>
           h('li', { className: 'sdc-skill-item', key: index },
             h('div', { className: 'sdc-skill-heading' }, h('h3', null, entry.name),
-              entry.version ? h('span', { className: 'sdc-muted' }, entry.version) : null)))));
+              entry.version ? h('span', { className: 'sdc-muted' }, entry.version) : null,
+              typeof entry.enabled === 'boolean' ? h('span', { className: 'sdc-muted' }, entry.enabled ? '配置中已启用' : '配置中已停用') : null)))));
     }
     function Dashboard() {
       const [overview, setOverview] = React.useState(null);
@@ -279,7 +281,7 @@ window.__ModuleLoader__.load({
                   h('button', { type: 'button', className: 'sdc-btn', onClick: () => { setDesktopId(null); setSearch(''); } }, '返回桌面应用'),
                   h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label)),
                 !query ? h(McpList, { mcp: desktop.mcp }) : null,
-                !query ? h(PluginList, { plugins: desktop.plugins }) : null,
+                !query ? h(PluginList, { plugins: desktop.plugins, configured: desktop.id === 'codex-desktop' }) : null,
                 h(SkillsList, { desktops: [desktop], search: query, showDesktop: false })) :
             tab === 'desktops' ?
               h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },

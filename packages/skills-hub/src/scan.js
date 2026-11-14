@@ -10,6 +10,7 @@ const MAX_PACKAGE_BYTES = 8 * 1024 * 1024;
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 const MAX_PACKAGE_FILES = 256;
 const MAX_DEPTH = 8;
+const SAFE_HIDDEN_FILES = new Set(['.gitignore', '.gitattributes']);
 const IGNORED_NAMES = new Set(['.DS_Store']);
 
 function isInside(parent, child) {
@@ -47,7 +48,7 @@ export function parseFrontmatter(text) {
 /**
  * Produce a deterministic fingerprint of *all readable regular package files*.
  * If any content cannot be safely inspected, report unknown rather than a
- * misleading 'same'. Nested symlinks and hidden files are not followed.
+ * misleading 'same'. Nested symlinks and hidden files outside the metadata allowlist are excluded.
  */
 async function fingerprintPackage(folder, filesystem) {
   const hash = createHash('sha256');
@@ -72,7 +73,7 @@ async function fingerprintPackage(folder, filesystem) {
     entries.sort((a, b) => a.name.localeCompare(b.name, 'en'));
     for (const entry of entries) {
       if (IGNORED_NAMES.has(entry.name)) continue;
-      if (entry.name.startsWith('.')) {
+      if (entry.name.startsWith('.') && !(entry.isFile() && SAFE_HIDDEN_FILES.has(entry.name))) {
         mark('HIDDEN_CONTENT_UNVERIFIED');
         continue;
       }
@@ -246,6 +247,9 @@ export function buildSkillMatrix(inventory) {
   const uncoveredIds = new Set(inventory.desktops.filter(item => item.skillRoots?.length === 0).map(item => item.id));
   const incompleteScanIds = new Set(inventory.desktops.filter(item =>
     item.skillRoots?.some(root => root.error) || item.diagnostics?.some(issue => !issue.skill)).map(item => item.id));
+  const failedNames = new Map(inventory.desktops.map(item => [
+    item.id, new Set((item.diagnostics ?? []).filter(issue => issue.skill).map(issue => issue.skill.toLowerCase())),
+  ]));
   const rows = new Map();
   for (const desktop of inventory.desktops) {
     for (const skill of desktop.skills) {
@@ -272,7 +276,7 @@ export function buildSkillMatrix(inventory) {
       const byDesktopStatus = {};
       for (const id of targetIds) {
         const items = row.byDesktop[id];
-        byDesktopStatus[id] = items.length === 0 ? (uncoveredIds.has(id) || incompleteScanIds.has(id) ? 'unknown' : 'missing') :
+        byDesktopStatus[id] = items.length === 0 ? (uncoveredIds.has(id) || incompleteScanIds.has(id) || failedNames.get(id).has(row.name.toLowerCase()) ? 'unknown' : 'missing') :
           items.some((item) => !item.packageSha256) ? 'unknown' :
           new Set(items.map((item) => item.packageSha256)).size > 1 ? 'conflict' :
           fingerprints.size > 1 ? 'different' : 'same';

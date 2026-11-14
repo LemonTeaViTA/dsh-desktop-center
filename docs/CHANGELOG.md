@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.0-rc.11
+
+- 分开识别 Trae 国际版及国内版，扫描各自的用户 Skills 目录。
+
+- 接入 WorkBuddy 用户级 Skills、MCP 配置和插件安装登记，以及 Codex 用户插件配置。
+- 将普通 Git 元数据纳入 Skill 指纹，并区分单个 Skill 读取失败和包内容比较受限。
+
 ## v0.3.0-rc.10
 
 - 接入 ZCode 用户级 Skills 和 MCP 配置，支持 MCP 的共享配置回退。
