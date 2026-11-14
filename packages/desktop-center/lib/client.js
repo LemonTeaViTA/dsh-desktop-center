@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.6';
+    const CLIENT_VERSION = '0.3.0-rc.7';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -175,8 +175,8 @@ window.__ModuleLoader__.load({
     }
     function McpList({ mcp }) {
       const messages = {
-        missing: '未找到 Codex 的用户配置文件。',
-        unreadable: '无法读取或解析 Codex 的用户配置。',
+        missing: '未找到 该应用的用户配置文件。',
+        unreadable: '无法读取或解析 该应用的用户配置。',
       };
       return h('section', { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-mcp-heading' },
         h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-mcp-heading' }, 'MCP')),
@@ -186,7 +186,7 @@ window.__ModuleLoader__.load({
         h('ul', { className: 'sdc-skill-list' }, ...mcp.servers.map(server =>
           h('li', { className: 'sdc-skill-item', key: server.name },
             h('div', { className: 'sdc-skill-heading' }, h('h3', null, server.name),
-              h('span', { className: 'sdc-muted' }, server.enabled ? '已配置' : '配置中已停用'))))));
+              h('span', { className: 'sdc-muted' }, server.enabled === false ? '配置中已停用' : '已配置'))))));
     }
     function Dashboard() {
       const [overview, setOverview] = React.useState(null);

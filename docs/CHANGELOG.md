@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0-rc.7
+
+- 显示 Skills 多行简介正文并支持搜索。
+- 分别展示 Qoder 国际版和国内版用户配置中的 MCP 服务名称。
+
 ## v0.3.0-rc.6
 
 - 新增 Desktop 详情，集中查看该应用的 Skills 和 MCP。

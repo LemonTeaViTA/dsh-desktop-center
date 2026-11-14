@@ -20,15 +20,26 @@ function isInside(parent, child) {
   );
 }
 
-/** Parse only safe, single-line frontmatter fields; never evaluate YAML. */
+/** Read bounded frontmatter text without evaluating YAML tags or aliases. */
 export function parseFrontmatter(text) {
-  if (!text.startsWith('---\n')) return {};
-  const end = text.indexOf('\n---', 4);
-  if (end < 0 || end > 8192) return {};
+  const header = /^---[ \t]*\r?\n([\s\S]*?)^---[ \t]*\r?$/m.exec(text.slice(0, 8192));
+  if (header?.index !== 0) return {};
   const result = {};
-  for (const line of text.slice(4, end).split(/\r?\n/)) {
-    const match = /^(name|description):\s*(.*?)\s*$/.exec(line);
-    if (match) result[match[1]] = match[2].replace(/^['"]|['"]$/g, '').slice(0, 240);
+  const lines = header[1].split(/\r?\n/);
+  for (const [index, line] of lines.entries()) {
+    const match = /^(name|description):[ \t]*(.*?)[ \t]*$/.exec(line);
+    if (!match) continue;
+    const [, key, value] = match;
+    if (key === 'description' && /^[>|][+-]?(?:\s+#.*)?$/.test(value)) {
+      const block = [];
+      for (const part of lines.slice(index + 1)) {
+        if (part.trim() && !/^ /.test(part)) break;
+        block.push(part.trim());
+      }
+      result.description = block.join(' ').replace(/\s+/g, ' ').trim().slice(0, 240);
+    } else {
+      result[key] = value.replace(/^['"]|['"]$/g, '').slice(0, 240);
+    }
   }
   return result;
 }

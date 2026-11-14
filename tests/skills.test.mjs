@@ -157,3 +157,10 @@ test('oversized supplementary files create incomplete package status without exp
     await fs.rm(home, { recursive: true, force: true });
   }
 });
+
+test('Skill introductions read folded and literal blocks but exclude other fields and the body', () => {
+  for (const marker of ['>', '>-', '|', '|+']) {
+    const text = ['---', 'description: ' + marker, '  Browse diagrams', '  and export them.', 'name: diagram', '---', 'Body'].join('\r\n');
+    assert.deepEqual(parseFrontmatter(text), { name: 'diagram', description: 'Browse diagrams and export them.' });
+  }
+});

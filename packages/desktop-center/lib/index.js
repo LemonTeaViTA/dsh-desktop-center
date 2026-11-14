@@ -5,12 +5,14 @@
  * their single-install entry point; no Desktop settings are written.
  */
 import { createDesktopRegistry } from './registry/service.js';
-import { readCodexMcp } from './codex-mcp.js';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { readCodexMcp, readQoderMcp } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.6';
+export const VERSION = '0.3.0-rc.7';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
@@ -21,7 +23,7 @@ const noCache = { 'cache-control': 'no-store', 'x-content-type-options': 'nosnif
 const json = (payload, status = 200) => Response.json(payload, { status, headers: noCache });
 
 /** Inject dependencies for deterministic tests; no external process launched. */
-export function createDesktopCenter({ registry = createDesktopRegistry(), hub, platform = process.platform, readMcp = readCodexMcp } = {}) {
+export function createDesktopCenter({ registry = createDesktopRegistry(), hub, platform = process.platform, readMcp = readCodexMcp, home = homedir() } = {}) {
   const skillsHub = hub ?? createSkillsHub({ registry });
   return Object.freeze({
     version: 1,
@@ -29,10 +31,12 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
     skillsHub,
     async overview() {
       const inventory = await skillsHub.inventory();
-      const desktops = await Promise.all(inventory.desktops.map(async desktop =>
-        platform === 'darwin' && desktop.id === 'codex-desktop'
-          ? { ...desktop, mcp: await readMcp() }
-          : desktop));
+      const desktops = await Promise.all(inventory.desktops.map(async desktop => {
+        if (platform !== 'darwin') return desktop;
+        if (desktop.id === 'codex-desktop') return { ...desktop, mcp: await readMcp() };
+        const directory = { 'qoder-global': '.qoder', 'qoder-cn': '.qoder-cn' }[desktop.id];
+        return directory ? { ...desktop, mcp: await readQoderMcp(join(home, directory, 'settings.json')) } : desktop;
+      }));
       return {
         version: VERSION,
         scannedAt: inventory.scannedAt,
@@ -69,7 +73,7 @@ export function makeRoutes(center) {
       }
       try {
         return json({ ok: true, data: await get() });
-      } catch (error) {
+      } catch {
         // Never echo raw filesystem paths, exception stacks or sensitive data.
         return json({ ok: false, error: 'SCAN_FAILED', message: 'Read-only scan failed. Check DSH plugin logs.' }, 500);
       }
