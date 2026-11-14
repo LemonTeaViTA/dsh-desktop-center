@@ -7,12 +7,12 @@
 import { createDesktopRegistry } from './registry/service.js';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readCodexPlugins } from './codex-mcp.js';
+import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readCodexPlugins, readTraeExtensions } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.11';
+export const VERSION = '0.3.0-rc.12';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
@@ -43,6 +43,16 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
           const [mcp, plugins] = await Promise.all([
             readQoderMcp(join(home, '.workbuddy', 'mcp.json')),
             readQoderPlugins(join(home, '.workbuddy', 'plugins', 'installed_plugins.json')),
+          ]);
+          return { ...desktop, mcp, plugins };
+        }
+        if (desktop.id === 'trae' || desktop.id === 'trae-cn') {
+          const isCn = desktop.id === 'trae-cn';
+          const userData = isCn ? 'Trae CN' : 'Trae';
+          const extensionHome = isCn ? '.trae-cn' : '.trae';
+          const [mcp, plugins] = await Promise.all([
+            readQoderMcp(join(home, 'Library', 'Application Support', userData, 'User', 'mcp.json')),
+            readTraeExtensions(join(home, extensionHome, 'extensions', 'extensions.json')),
           ]);
           return { ...desktop, mcp, plugins };
         }

@@ -82,3 +82,24 @@ test('ZCode uses shared MCP only when native settings contain no servers', async
   await writeFile(native, '{');
   assert.deepEqual(await readZCodeMcp(home), { status: 'unreadable', servers: [] });
 });
+
+test('TRAE reads each edition user MCP and extension registry independently', async t => {
+  const home = await mkdtemp(join(tmpdir(), 'dsh-trae-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  for (const [edition, dotDir, name] of [['Trae', '.trae', 'global'], ['Trae CN', '.trae-cn', 'cn']]) {
+    const user = join(home, 'Library', 'Application Support', edition, 'User');
+    const extensions = join(home, dotDir, 'extensions');
+    await mkdir(user, { recursive: true });
+    await mkdir(extensions, { recursive: true });
+    await writeFile(join(user, 'mcp.json'), JSON.stringify({ mcpServers: { [name]: { command: 'fixture-secret' } } }));
+    await writeFile(join(extensions, 'extensions.json'), JSON.stringify([
+      { identifier: { id: 'fixture.' + name }, version: '1.2.3', location: 'fixture-secret' },
+    ]));
+  }
+  const desktops = ['trae', 'trae-cn'].map(id => ({ id, skills: [], appPaths: [], diagnostics: [] }));
+  const center = createDesktopCenter({ home, platform: 'darwin', hub: { inventory: async () => ({ desktops }) } });
+  const { desktops: result } = await center.overview();
+  assert.deepEqual(result.map(d => d.mcp.servers), [[{ name: 'global' }], [{ name: 'cn' }]]);
+  assert.deepEqual(result.map(d => d.plugins.entries), [[{ name: 'fixture.global', version: '1.2.3' }], [{ name: 'fixture.cn', version: '1.2.3' }]]);
+  assert.doesNotMatch(JSON.stringify(result), /fixture-secret/);
+});

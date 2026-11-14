@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.11';
+    const CLIENT_VERSION = '0.3.0-rc.12';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -192,13 +192,13 @@ window.__ModuleLoader__.load({
             h('div', { className: 'sdc-skill-heading' }, h('h3', null, server.name),
               h('span', { className: 'sdc-muted' }, server.enabled === false ? '配置中已停用' : '已配置'))))));
     }
-    function PluginList({ plugins, configured }) {
+    function PluginList({ plugins, configured, extensions }) {
       const messages = {
         missing: '未找到此应用的用户插件登记文件。',
         unreadable: '无法读取或识别此应用的插件登记格式。',
       };
       return h('section', { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-plugin-heading' },
-        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading' }, configured ? '用户插件配置' : '用户插件')),
+        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading' }, configured ? '用户插件配置' : extensions ? '用户扩展' : '用户插件')),
         !plugins ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的插件清单。') :
         plugins.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[plugins.status]) :
         !plugins.entries.length ? h('p', { className: 'sdc-muted' }, configured ? '没有用户插件配置记录。' : '没有用户插件安装记录。') :
@@ -281,7 +281,7 @@ window.__ModuleLoader__.load({
                   h('button', { type: 'button', className: 'sdc-btn', onClick: () => { setDesktopId(null); setSearch(''); } }, '返回桌面应用'),
                   h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label)),
                 !query ? h(McpList, { mcp: desktop.mcp }) : null,
-                !query ? h(PluginList, { plugins: desktop.plugins, configured: desktop.id === 'codex-desktop' }) : null,
+                !query ? h(PluginList, { plugins: desktop.plugins, configured: desktop.id === 'codex-desktop', extensions: desktop.id === 'trae' || desktop.id === 'trae-cn' }) : null,
                 h(SkillsList, { desktops: [desktop], search: query, showDesktop: false })) :
             tab === 'desktops' ?
               h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },

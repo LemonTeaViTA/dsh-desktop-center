@@ -48,6 +48,21 @@ async function readMcpConfig(file, selectServers, getEnabled) {
   return { status, servers: entries };
 }
 
+export function readTraeExtensions(file) {
+  return readConfig(file, text => {
+    const extensions = JSON.parse(text);
+    if (!Array.isArray(extensions)) throw new Error('Invalid TRAE extension registry');
+    return extensions.map(extension => {
+      const name = extension?.identifier?.id;
+      const version = extension?.version;
+      if (typeof name !== 'string' || !name || typeof version !== 'string') {
+        throw new Error('Invalid TRAE extension entry');
+      }
+      return { name, version };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+  });
+}
+
 export function readCodexPlugins(file) {
   return readConfig(file, text => {
     const { plugins = {} } = TOML.parse(text);
