@@ -10,7 +10,9 @@ window.__ModuleLoader__.load({
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
-      .sdc{box-sizing:border-box;padding:28px clamp(18px,4vw,48px) 52px;max-width:1400px;margin:0 auto;width:100%;flex:1 1 0%;min-height:0;max-height:100%;overflow:auto;color:inherit;font-family:inherit}
+      .sdc-panel{box-sizing:border-box;display:flex;flex-direction:column;width:100%;height:100%;max-height:100dvh;min-height:0;min-width:0}
+      .sdc-viewport{flex:1;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-app-region:no-drag}
+      .sdc{box-sizing:border-box;padding:28px clamp(18px,4vw,48px) 52px;max-width:1400px;margin:0 auto;width:100%;color:inherit;font-family:inherit}
       .sdc *{box-sizing:border-box}.sdc button,.sdc input{font:inherit}.sdc button{cursor:pointer}
       .sdc-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
       .sdc-eyebrow{text-transform:uppercase;font-size:11px;font-weight:650;letter-spacing:.11em;opacity:.58}
@@ -155,43 +157,45 @@ window.__ModuleLoader__.load({
       const matching = desktops.filter(d => [d.label, d.id, d.status].join(' ').toLowerCase().includes(query));
       const stat = overview?.summary;
       const tabs = [['desktops','桌面应用'],['skills','Skills 清单'],['diff','跨端差异'],['diagnostics','诊断']];
-      return h('main', { className: 'sdc', tabIndex: 0, 'aria-label': 'Desktop Center 管理面板' },
-        h('header', { className: 'sdc-hero' },
-          h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
-            h('h1', null, 'Desktop Center'),
-            h('p', { className: 'sdc-muted' }, '统一查看桌面应用、Skills 与跨应用配置差异。')),
-          h(Pill, { label: 'V0.3 · 只读模式', tone: 'good' })),
-        h('section', { className: 'sdc-stats', 'aria-label': '扫描统计' },
-          ...[
-            [stat?.desktopCount ?? '—', 'Desktop 目标'],
-            [stat?.installedAppCount ?? '—', '发现应用的目标'],
-            [stat?.skillOccurrences ?? '—', 'Skills 扫描记录'],
-            [stat?.diagnosticCount ?? '—', '扫描诊断'],
-          ].map(([n,label]) => h('div', { className: 'sdc-stat', key: label }, h('strong', null, String(n)), h('span', null, label)))),
-        h('div', { className: 'sdc-toolbar' },
-          h('div', { className: 'sdc-tabs', role: 'tablist', 'aria-label': '选择管理视图' },
-            ...tabs.map(([key,label]) => h('button', { type: 'button', key, role: 'tab', className: 'sdc-tab',
-              'aria-selected': tab === key, onClick: () => { setTab(key); setSearch(''); } }, label))),
-          h('div', { className: 'sdc-actions' },
-            h('input', { className: 'sdc-field', type: 'search', value: search, onChange: e => setSearch(e.target.value),
-              'aria-label': '搜索当前视图', placeholder: '搜索...' }),
-            h('button', { type: 'button', className: 'sdc-btn', disabled: loading,
-              onClick: () => { void reload(); } }, loading ? '扫描中…' : '重新扫描'))),
-        error ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error) : null,
-        overview && overview.platform !== 'darwin' ? h('div', { className: 'sdc-alert' }, '当前 Host 不是 macOS，只提供有限的兼容性信息。') : null,
-        loading && !overview ? h(Empty, { title: '正在扫描本地 Desktop', subtitle: '仅读取已知的应用与 Skills 路径，不会更改任何配置。' }) : null,
-        !overview ? null : tab === 'desktops' ?
-          h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
-            ...matching.map(d => h(Card, { key: d.id, desktop: d })),
-            ...(matching.length ? [] : [h(Empty, { key: 'empty', title: '没有匹配的应用', subtitle: '尝试其他关键词。' })])) :
-          h('section', { className: 'sdc-pane' },
-            h('div', { className: 'sdc-pane-title' }, tab === 'skills' ? 'Skills 资源清单' : tab === 'diff' ? '跨 Desktop Skill 包对比' : '安全诊断'),
-            tab === 'skills' ? h(SkillsTable, { desktops, search: query }) :
-            tab === 'diff' ? h(CompareTable, { rows: comparison?.matrix || [], desktops, search: query }) :
-            h(DiagnosticTable, { desktops, search: query })),
-        h('footer', { className: 'sdc-foot' },
-          '当前版本不会进行安装、配置同步、签到或账号操作。目录存在不代表应用正在运行或已经登录。',
-          overview ? h('span', null, ' 最近扫描：' + new Date(overview.scannedAt).toLocaleString()) : null));
+      return h('div', { className: 'sdc-panel' },
+        h('div', { className: 'sdc-viewport', tabIndex: 0, role: 'region', 'aria-label': 'Desktop Center 滚动区域' },
+          h('main', { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
+            h('header', { className: 'sdc-hero' },
+              h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
+                h('h1', null, 'Desktop Center'),
+                h('p', { className: 'sdc-muted' }, '统一查看桌面应用、Skills 与跨应用配置差异。')),
+              h(Pill, { label: 'V0.3 · 只读模式', tone: 'good' })),
+            h('section', { className: 'sdc-stats', 'aria-label': '扫描统计' },
+              ...[
+                [stat?.desktopCount ?? '—', 'Desktop 目标'],
+                [stat?.installedAppCount ?? '—', '发现应用的目标'],
+                [stat?.skillOccurrences ?? '—', 'Skills 扫描记录'],
+                [stat?.diagnosticCount ?? '—', '扫描诊断'],
+              ].map(([n,label]) => h('div', { className: 'sdc-stat', key: label }, h('strong', null, String(n)), h('span', null, label)))),
+            h('div', { className: 'sdc-toolbar' },
+              h('div', { className: 'sdc-tabs', role: 'tablist', 'aria-label': '选择管理视图' },
+                ...tabs.map(([key,label]) => h('button', { type: 'button', key, role: 'tab', className: 'sdc-tab',
+                  'aria-selected': tab === key, onClick: () => { setTab(key); setSearch(''); } }, label))),
+              h('div', { className: 'sdc-actions' },
+                h('input', { className: 'sdc-field', type: 'search', value: search, onChange: e => setSearch(e.target.value),
+                  'aria-label': '搜索当前视图', placeholder: '搜索...' }),
+                h('button', { type: 'button', className: 'sdc-btn', disabled: loading,
+                  onClick: () => { void reload(); } }, loading ? '扫描中…' : '重新扫描'))),
+            error ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error) : null,
+            overview && overview.platform !== 'darwin' ? h('div', { className: 'sdc-alert' }, '当前 Host 不是 macOS，只提供有限的兼容性信息。') : null,
+            loading && !overview ? h(Empty, { title: '正在扫描本地 Desktop', subtitle: '仅读取已知的应用与 Skills 路径，不会更改任何配置。' }) : null,
+            !overview ? null : tab === 'desktops' ?
+              h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
+                ...matching.map(d => h(Card, { key: d.id, desktop: d })),
+                ...(matching.length ? [] : [h(Empty, { key: 'empty', title: '没有匹配的应用', subtitle: '尝试其他关键词。' })])) :
+              h('section', { className: 'sdc-pane' },
+                h('div', { className: 'sdc-pane-title' }, tab === 'skills' ? 'Skills 资源清单' : tab === 'diff' ? '跨 Desktop Skill 包对比' : '安全诊断'),
+                tab === 'skills' ? h(SkillsTable, { desktops, search: query }) :
+                tab === 'diff' ? h(CompareTable, { rows: comparison?.matrix || [], desktops, search: query }) :
+                h(DiagnosticTable, { desktops, search: query })),
+            h('footer', { className: 'sdc-foot' },
+              '当前版本不会进行安装、配置同步、签到或账号操作。目录存在不代表应用正在运行或已经登录。',
+              overview ? h('span', null, ' 最近扫描：' + new Date(overview.scannedAt).toLocaleString()) : null))));
     }
     function SidebarIcon({ size = 18 }) {
       return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
