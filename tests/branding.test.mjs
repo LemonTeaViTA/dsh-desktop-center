@@ -11,13 +11,14 @@ test('published product name, Cordis IDs, UI IDs and routes use Desktop Center n
   const workspace = JSON.parse(await read('package.json'));
   assert.equal(manifest.name, 'dsh-desktop-center');
   assert.equal(workspace.name, 'dsh-desktop-center-workspace');
-  assert.equal(manifest.version, '0.3.0-rc.4');
+  assert.equal(manifest.version, '0.3.0-rc.5');
   assert.equal(workspace.version, manifest.version);
   assert.match(await read('packages/desktop-center/cordis.patch.yml'), /id: dsh-desktop-center\s+name: dsh-desktop-center/);
   const host = await read('packages/desktop-center/lib/index.js');
   const client = await read('packages/desktop-center/lib/client.js');
   assert.match(host, /\/api\/dsh-desktop-center\/overview/);
   assert.match(client, /id: 'dsh-desktop-center'/);
+  assert.ok(client.includes("const CLIENT_VERSION = '" + manifest.version + "';"));
   assert.match(client, /PAGE_ID = 'dsh-desktop-center'/);
   for (const content of [manifest.name, host, client]) assert.doesNotMatch(content, /dsh-superagent|superagent-desktop-center/i);
 });

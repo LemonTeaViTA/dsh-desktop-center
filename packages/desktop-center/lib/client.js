@@ -7,6 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
+    const CLIENT_VERSION = '0.3.0-rc.5';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -42,6 +43,18 @@ window.__ModuleLoader__.load({
       .sdc-ind{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.22;display:inline-block;margin-right:7px}
       .sdc-ind[data-on=true]{background:#15a877;opacity:1}
       .sdc-pane{overflow:hidden}.sdc-pane-title{padding:18px 20px;border-bottom:1px solid color-mix(in srgb,currentColor 9%,transparent);font-weight:650;font-size:14px}
+      .sdc-skill-group{padding:20px}
+      .sdc-skill-group+.sdc-skill-group{border-top:1px solid color-mix(in srgb,currentColor 12%,transparent)}
+      .sdc-skill-heading{display:flex;align-items:baseline;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px}
+      .sdc-skill-heading h2{margin:0;font-size:16px}
+      .sdc-skill-list{list-style:none;margin:0;padding:0}
+      .sdc-skill-item{padding:12px 0;overflow-wrap:anywhere}
+      .sdc-skill-item+.sdc-skill-item{border-top:1px solid color-mix(in srgb,currentColor 9%,transparent)}
+      .sdc-skill-item h3{font-size:14px;margin:0}
+      .sdc-skill-item p{max-width:75ch;margin-top:4px;font-size:13px}
+      .sdc-skill-item details{margin-top:6px;font-size:12px}
+      .sdc-skill-item summary{width:fit-content;cursor:pointer}
+      .sdc-skill-item details ul{margin:6px 0 0;padding-inline-start:20px}
       .sdc-scroll{max-width:100%;overflow:auto}.sdc-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px;min-width:630px}
       .sdc-table th{font-size:11px;white-space:nowrap;opacity:.62;font-weight:650}.sdc-table td,.sdc-table th{padding:12px 15px;border-bottom:1px solid color-mix(in srgb,currentColor 8%,transparent)}
       .sdc-table tr:last-child td{border-bottom:0}.sdc-table td:first-child{font-weight:610}
@@ -93,17 +106,46 @@ window.__ModuleLoader__.load({
           ...(desktop.appPaths.length === 0 && roots.length === 0 ? [h('li', { key: 'none', className: 'sdc-muted' }, '尚无已验证的配置路径')] : [])),
         ...(desktop.notes || []).map((note, i) => h('p', { key: i, className: 'sdc-muted', style: { marginTop: 10 } }, note)));
     }
-    function SkillsTable({ desktops, search }) {
-      const rows = desktops.flatMap(d => d.skills.map(s => ({ ...s, desktopLabel: d.label, desktopId: d.id })));
-      const filtered = rows.filter(s => [s.name, s.desktopLabel, s.description].join(' ').toLowerCase().includes(search));
-      if (!filtered.length) return h(Empty, { title: '没有匹配的 Skills', subtitle: '尚未检测到 Skill 包，或请尝试其他搜索词。' });
-      return h('div', { className: 'sdc-scroll' },
-        h('table', { className: 'sdc-table' },
-          h('thead', null, h('tr', null, ...['Skill','Desktop','作用域','文件数','包完整性'].map(t => h('th', { key: t }, t)))),
-          h('tbody', null, ...filtered.map((s,i) => h('tr', { key: s.desktopId + ':' + s.root + ':' + i },
-            h('td', null, s.name), h('td', null, s.desktopLabel), h('td', null, s.scope),
-            h('td', null, String(s.fileCount)),
-            h('td', null, h(Pill, { label: s.fingerprintStatus === 'complete' ? '指纹完整' : '未知', tone: s.fingerprintStatus === 'complete' ? 'good' : 'warn' })))))));
+    const skillIssueLabels = {
+      HIDDEN_CONTENT_UNVERIFIED: '隐藏文件未参与比较',
+      NESTED_SYMLINK_UNVERIFIED: '跳过了包内的符号链接',
+      PACKAGE_PATH_ESCAPE: '跳过了指向包目录外的路径',
+      MAX_DEPTH_EXCEEDED: '目录层级超出扫描上限',
+      PACKAGE_LIMIT_EXCEEDED: '文件大小或数量超出扫描上限',
+      EACCES: '没有读取权限',
+      EPERM: '系统阻止了读取',
+    };
+    function SkillsList({ desktops, search }) {
+      const groups = desktops.map(desktop => ({
+        desktop,
+        skills: desktop.skills.filter(skill =>
+          [skill.name, skill.directoryName, skill.description, desktop.label].some(value =>
+            value?.toLowerCase().includes(search))),
+      })).filter(({ desktop, skills }) =>
+        !search || skills.length || desktop.label.toLowerCase().includes(search));
+      if (!groups.length) return h(Empty, { title: '没有匹配的 Skills', subtitle: '试试 Skill 名称、简介或桌面应用名称。' });
+      return groups.map(({ desktop, skills }) => {
+        const headingId = 'sdc-skills-' + desktop.id;
+        const emptyMessage = desktop.skillRoots.length
+          ? '未扫描到 Skills。'
+          : '当前未覆盖此应用的 Skills 路径。';
+        return h('section', { key: desktop.id, className: 'sdc-skill-group', 'aria-labelledby': headingId },
+          h('div', { className: 'sdc-skill-heading' },
+            h('h2', { id: headingId }, desktop.label),
+            skills.length ? h('span', { className: 'sdc-muted' }, skills.length + ' 条记录') : null),
+          skills.length ? h('ul', { className: 'sdc-skill-list' }, ...skills.map(skill => {
+            const issues = desktop.diagnostics.filter(issue =>
+              issue.root === skill.root && issue.skill === skill.directoryName);
+            const incomplete = skill.fingerprintStatus !== 'complete';
+            return h('li', { key: skill.file, className: 'sdc-skill-item' },
+              h('h3', null, skill.name),
+              h('p', { className: 'sdc-muted' }, skill.description?.trim() || '暂无简介'),
+              incomplete || issues.length ? h('details', null,
+                h('summary', null, incomplete ? '部分内容无法比较' : '查看扫描异常'),
+                issues.length ? h('ul', null, ...issues.map(({ reason }, index) =>
+                  h('li', { key: index }, skillIssueLabels[reason] || '部分文件无法读取（' + reason + '）'))) : null) : null);
+          })) : h('p', { className: 'sdc-muted' }, emptyMessage));
+      });
     }
     function CompareTable({ rows, desktops, search }) {
       const filtered = rows.filter(r => r.name.toLowerCase().includes(search));
@@ -164,7 +206,7 @@ window.__ModuleLoader__.load({
               h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
                 h('h1', null, 'Desktop Center'),
                 h('p', { className: 'sdc-muted' }, '统一查看桌面应用、Skills 与跨应用配置差异。')),
-              h(Pill, { label: 'V0.3 · 只读模式', tone: 'good' })),
+              h(Pill, { label: 'v' + CLIENT_VERSION + ' · 只读', tone: 'good' })),
             h('section', { className: 'sdc-stats', 'aria-label': '扫描统计' },
               ...[
                 [stat?.desktopCount ?? '—', 'Desktop 目标'],
@@ -178,7 +220,7 @@ window.__ModuleLoader__.load({
                   'aria-selected': tab === key, onClick: () => { setTab(key); setSearch(''); } }, label))),
               h('div', { className: 'sdc-actions' },
                 h('input', { className: 'sdc-field', type: 'search', value: search, onChange: e => setSearch(e.target.value),
-                  'aria-label': '搜索当前视图', placeholder: '搜索...' }),
+                  'aria-label': '搜索当前视图', placeholder: tab === 'skills' ? '搜索名称、简介或 Desktop' : '搜索...' }),
                 h('button', { type: 'button', className: 'sdc-btn', disabled: loading,
                   onClick: () => { void reload(); } }, loading ? '扫描中…' : '重新扫描'))),
             error ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error) : null,
@@ -190,7 +232,7 @@ window.__ModuleLoader__.load({
                 ...(matching.length ? [] : [h(Empty, { key: 'empty', title: '没有匹配的应用', subtitle: '尝试其他关键词。' })])) :
               h('section', { className: 'sdc-pane' },
                 h('div', { className: 'sdc-pane-title' }, tab === 'skills' ? 'Skills 资源清单' : tab === 'diff' ? '跨 Desktop Skill 包对比' : '安全诊断'),
-                tab === 'skills' ? h(SkillsTable, { desktops, search: query }) :
+                tab === 'skills' ? h(SkillsList, { desktops, search: query }) :
                 tab === 'diff' ? h(CompareTable, { rows: comparison?.matrix || [], desktops, search: query }) :
                 h(DiagnosticTable, { desktops, search: query })),
             h('footer', { className: 'sdc-foot' },

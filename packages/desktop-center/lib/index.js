@@ -9,7 +9,7 @@ import { createSkillsHub } from './skills/service.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.4';
+export const VERSION = '0.3.0-rc.5';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
