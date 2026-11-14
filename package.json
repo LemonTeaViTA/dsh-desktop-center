@@ -1,0 +1,27 @@
+{
+  "name": "dsh-superagent-starter-workspace",
+  "version": "0.3.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH Desktop Center V0.3 single-install bundle, source modules, governance and tests",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node scripts/check-repository.mjs",
+    "typecheck": "tsc --project tsconfig.contracts.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "quality": "npm run check && npm run lint && npm run format:check && npm run typecheck && npm test",
+    "pack:desktop-center": "node scripts/pack-desktop-center.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.1",
+    "eslint": "9.39.1",
+    "globals": "16.4.0",
+    "prettier": "3.6.2",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

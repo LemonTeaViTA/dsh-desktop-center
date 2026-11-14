@@ -1,0 +1,10 @@
+{
+  "name": "dsh-superagent-desktop-registry",
+  "version": "0.2.0",
+  "description": "Read-only registry for AI desktop applications",
+  "type": "module",
+  "main": "./index.js",
+  "files": ["index.js", "src", "cordis.patch.yml"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "engines": { "node": ">=20" }
+}

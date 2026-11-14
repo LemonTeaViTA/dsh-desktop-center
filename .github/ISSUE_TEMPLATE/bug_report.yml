@@ -1,0 +1,34 @@
+name: Bug report
+about: Report an issue with the DSH Desktop Center candidate
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: '不要发布 Token、Cookie、用户目录中的私密文件或未经脱敏的诊断日志。'
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      placeholder: '0.3.0'
+    validations:
+      required: true
+  - type: input
+    id: dsh_version
+    attributes:
+      label: DSH Desktop version and OS
+      placeholder: 'macOS ..., DSH ...'
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: 'Provide concise steps without sensitive information.'
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual result
+    validations:
+      required: true

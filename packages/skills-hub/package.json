@@ -1,0 +1,10 @@
+{
+  "name": "dsh-superagent-skills-hub",
+  "version": "0.2.0",
+  "description": "Read-only Skills inventory and compatibility diff for Desktop apps",
+  "type": "module",
+  "main": "./index.js",
+  "files": ["index.js", "src", "cordis.patch.yml"],
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "engines": { "node": ">=20" }
+}

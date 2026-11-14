@@ -1,0 +1,35 @@
+# QUALITY GATES · 工程与发布门禁 V0.2
+
+## 先明确三类证据
+
+1. **本机可执行 / 无第三方包**：`npm run check`（所有 JS 语法及仓库结构）、`npm test`（Node 内置测试）。不需要网络。
+2. **依赖安装后可执行**：`npm run lint`（ESLint）、`npm run format:check`（Prettier）、`npm run typecheck`（TypeScript 公共契约），`npm run quality` 组合上述检查。没有运行成功就不能声称通过。
+3. **真实集成 / 人工**：macOS DSH Desktop 中插件安装、启用、卸载、持久化与 UI；模拟测试、CI 均不能代替。
+
+## 阶段门禁
+
+| 阶段 | 自动门禁 | 人工/环境证据 |
+|---|---|---|
+| PR 初审 | Node 测试、ESM 语法、ESLint、Prettier、类型声明 | 契约变更评审、边界和数据敏感度 |
+| 代码合并 | 所有 PR 门禁通过；新增行为配回归测试 | Maintainer 审查安全与兼容性 |
+| 安装验证 | 产出 Bundle 内容、无额外文件或密钥 | 真实 DSH API、Host 生命周期、Mac App 版本 |
+| UI 验收 | 实际可运行 UI 的可访问性与交互测试 | 截图、暗/亮主题、Unslop 红线评审 |
+| 发布 | 上述所有已验证；回滚演练 | 发版说明、支持矩阵、风险和降级步骤 |
+
+## 受限环境说明
+
+当前构建环境无法解析 `registry.npmjs.org`，因此只能运行离线门禁；ESLint/Prettier/依赖安装以及 GitHub Actions 尚未在此环境运行。仓库中的 `.github/workflows/quality.yml` 是**待在线 CI 验证的配置**，不能被算成一次已成功的 CI。
+
+`tsconfig.contracts.json` 当前只检查 `.d.ts` 契约，不代表全量 JS 通过 `strict` 类型检查。待完成逐包 TypeScript 迁移后才启用整仓严格类型检查。
+
+## 真实 DSH/桌面测试（发布前）
+
+- 记录操作系统、CPU 架构、DSH 版本与每个 Desktop 版本；至少一次离线/权限不足场景。
+- `desktopRegistry` 与 `skillsHub` 按官方 Bundles 流程安装，逐一检查服务 Vn；分别卸载验证依赖降级。
+- 只读扫描零写入，对配置不存在、WorkBuddy 未核实路径给明确未知状态。
+- 有 UI 时：Slots 在真实 Client 中存在，Host RPC 权限正确、无泄露凭据，所有 UI 状态可复现。
+- 加写入功能之后：必须有 dry-run、用户确认、原子写入、版本冲突保护和恢复测试；否则阻止发布。
+
+## 禁止的“验证替代品”
+
+不能以 `node --test` 代替 macOS 客户端测试；不能以截图代替交互测试；不能以 Skill 描述代替实际 lint；不能以“目录存在”证明用户已经登录；不能以工具调用成功推断积分到账。

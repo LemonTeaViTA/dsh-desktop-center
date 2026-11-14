@@ -1,0 +1,36 @@
+# Dependencies and generated build output
+node_modules/
+coverage/
+dist/
+build/
+.cache/
+.nyc_output/
+*.log
+npm-debug.log*
+
+# Local environment / credentials (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.p8
+*.key
+*.mobileprovision
+*.sqlite
+*.sqlite3
+*.db
+.credentials/
+.secrets/
+
+# macOS / editors / temporary files
+.DS_Store
+.AppleDouble
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local scratch and test output
+.tmp/
+tmp/

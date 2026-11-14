@@ -1,0 +1,17 @@
+name: Feature request
+about: Propose an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: 'Describe the user need and why existing features do not satisfy it.'
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed behavior and plugin boundary
+    validations:
+      required: true
