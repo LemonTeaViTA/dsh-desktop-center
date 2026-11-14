@@ -1,40 +1,32 @@
-# DSH SuperAgent · Desktop Center V0.3
+# DSH Desktop Center
 
-**本次重点：终于做成了一个单入口 DSH Bundle，并且有真正的 DSH Sidebar Client 页面。** 它仍然是需在真实 Mac DSH 中验证的安装候选版本，不能当成已在用户电脑安装成功的正式发布。
+**将多个 AI Desktop 的本地应用信息、Skills 清单和差异集中展示在 DSH 内。**
 
-## 直接使用的文件
+本仓库只有一个当前产品：**DSH Desktop Center**。它不是 SuperAgent，不负责任务编排、桌面远程控制、自动签到、积分领取、Skills 安装或 MCP / 原生插件管理。这些若开发，应成为独立项目或独立插件，不属于此仓库的功能承诺。
 
-- `releases/dsh-superagent-desktop-center-0.3.0.tgz`：单个可安装的 DSH npm Bundle 包，包含后台 Host、Web/Desktop Client、两个扫描模块，不需要在你的 Mac 安装项目开发依赖。
-- `packages/desktop-center/`：等效的本地目录安装源；**首次兼容性验证推荐让 DSH 插件管理器安装此目录**，而不是手改 Profile 或双击 ZIP。
-- `docs/INSTALLATION_V0.3.md`：一步一步的真实 Mac 验证说明。
+> 当前版本 **v0.3.0-rc.2（开源候选）**。已有本地自动化测试和 npm 打包验证，**尚未在用户 macOS DSH Desktop 上完成安装及 UI 集成验证**，不是稳定正式版。
 
-### 已实现
+## 已有功能
 
-| 功能 | 当前状态 |
-|---|---|
-| 一个包包含 DSH `dsh.bundle` 与 `dsh.client` | 完成打包、待实机装载 |
-| DSH 侧边栏 `Desktop Center` 入口与主面板 | Client 代码及离线 Slot 注册测试通过，待实机截图 |
-| 五个 Mac Desktop 目标 | 提供候选应用/目录映射，不等于账号在线 |
-| Skills 列表、全包指纹、跨端差异、扫描诊断 | 核心离线测试通过 |
-| Host/Client 数据通讯 | 使用 DSH `connection.fetch` 认证桥，离线路由测试通过 |
-| 搜索、刷新、加载/错误/空状态 | 已写入 Client，待真实 UI 操作测试 |
-| WorkBuddy Skills 路径 | 未可靠核实，显示未确定 |
-| 自动签到、Credits、Skills 安装/写入、MCP、Plugin Hub | 未开发；仍是独立后续插件计划 |
+| 模块 | 功能 | 边界 |
+|---|---|---|
+| Desktop Registry | 只读发现 Qoder 国际版 / CN、WorkBuddy、Trae、Codex Desktop 的本地应用候选和配置目录 | 路径存在不代表应用正在运行、账户已登录或接口连通 |
+| Skills Inventory | 只读扫描 Skills 目录、SKILL.md 元数据、整包 SHA-256 指纹 | 不运行 Skill 中的脚本，不安装/同步/编辑 Skills |
+| Skills Comparison | 按 Desktop 展示 Skills 差异和 `unknown` 状态 | 对无法验证的文件不报告为一致 |
+| Desktop Center 面板 | DSH 侧边栏入口、四个只读标签、搜索、刷新和扫描诊断 | UI 注册只完成离线模拟测试，尚未 Mac 实机验收 |
 
-**特别说明：** V0.3 的一键包内部仍将 Registry 与 Skills Hub 写成独立模块和两个版本化服务；为了一个安装入口，聚合 Bundle 暂时整体启停。这是便利安装与物理插件隔离之间的明确取舍。
+WorkBuddy 的实际 Skills 路径尚未核实，显示未确定而不是虚构数据。只对 Desktop 本地配置作只读发现；不将 CLI 视为 Desktop 应用的替代。
 
-## 在 DSH Desktop 安装
+## 安装（待实机验证）
 
-1. 查看 `docs/INSTALLATION_V0.3.md`。备份当前 profile，确认 DSH 版本满足包的 `engines.dsh`: `>=0.2.1-rc.2 <0.3.0-0`。
-2. 如果已经安装了 V0.2 的两个旧 Bundle，先通过 DSH 插件管理器禁用/卸载它们，避免重复服务名。
-3. 将整个项目 ZIP 解压到 Mac 的独立目录，在 DSH Creator 模式的官方 `plugin_manager` 中，对 `packages/desktop-center` 的**绝对路径**执行 `install_bundle`（让 DSH 展示安装目标并要求确认）。支持本地 tarball 的版本也可直接安装 `.tgz`。
-4. DSH 提示成功后，按它报告的 `nextStep` 重启或刷新，打开左侧 `Desktop Center`，核对 Mac 实际数据。
+- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.2.tgz`
+- **目录安装：** `packages/desktop-center/`（首次建议通过 DSH 官方插件管理器/Creator `plugin_manager install_bundle` 使用本地目录）
+- **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
+- **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。
 
-不是 `.dmg`，也还没有在 GitHub/npm 发布，所以不能声称它已支持「点公网链接就自动安装」。当前可安装包已经通过离线 npm 安装检查，但尚未经过真正 DSH Profile 安装。
+首次安装前备份 DSH Profile；若早期试验过独立 Registry / Skills Bundle，先通过官方管理器禁用以避免服务名冲突。`.tgz` 不是 macOS 双击安装文件，不能手改 DSH Profile 假装安装成功。
 
-## 质量状态
-
-在当前隔离 Node 环境执行：
+## 本地开发与验证
 
 ```bash
 npm run check
@@ -43,29 +35,29 @@ npm test
 npm run pack:desktop-center
 ```
 
-测试覆盖 Host 服务、认证路由形状、错误脱敏、Client factory/Slot 注册、配置与 Skills 差异。ESLint、Prettier 的依赖因 npm Registry 网络限制尚未安装/执行，在线 CI 未运行。`npm run quality` 不应被宣称已通过。
+有联网的 npm 开发环境可以安装审查后的依赖并执行 `npm run quality`（ESLint、Prettier、TypeScript、测试）。本开发环境未完成完整 lint/format 和 GitHub CI 实际运行，不得将这些项目标注为通过。
 
-## 开发结构
+```text
+packages/desktop-center/   单入口 Bundle（Host + Client + 只读聚合 API）
+packages/desktop-registry/ Desktop Registry 独立核心模块/Bundle
+packages/skills-hub/       Skills 清单/差异核心模块/Bundle
+contracts/                 只包含本项目实际服务契约
+skills/                    项目开发与测试流程 Skills（非产品功能）
+tests/                     离线回归测试
+docs/                      架构、设计、安装、发布规范
+```
 
-- `packages/desktop-registry/`：原生独立 Registry Bundle 与算法源。
-- `packages/skills-hub/`：原生独立 Skills Hub Bundle 与算法源。
-- `packages/desktop-center/`：新版一入口 Bundle，使用独立模块的快照。`npm run pack:desktop-center` 时从源目录复制并打包。
-- `tests/`：Node 自动测试。
-- `contracts/`、`skills/`、`docs/`：契约、研发 Skills、设计系统和质量规范。
+同一个安装包内部注册 `desktopRegistry`、`skillsHub`、`desktopCenter` 服务，但为了首次安装方便三个服务随 Bundle 一起启停；源码和接口仍保持模块边界。
 
-参考 [架构文档](docs/ARCHITECTURE.md)、[设计系统](docs/DESIGN_SYSTEM.md)、[完成定义](docs/DEFINITION_OF_DONE.md)、[安装验证](docs/INSTALLATION_V0.3.md)。
+## 开源 / Git 历史
 
-## 安全原则
+项目仓库名 **`dsh-desktop-center`**， npm Bundle 名 **`dsh-desktop-center`**，MIT 许可。
 
-只读；没有任意 shell 命令、CLI Desktop 替代、CDP、钥匙串或浏览器 Cookie 访问、外部 HTTP 上报。所有 GET 数据接口交由 DSH 的 `connection.fetch` 受认证路由承载。平台路径未验证时显示未知，不擅自操作其他 Desktop。
+- [架构及范围](docs/ARCHITECTURE.md)
+- [开发规范](docs/DEVELOPMENT.md)
+- [完成定义](docs/DEFINITION_OF_DONE.md)
+- [质量门禁](docs/QUALITY_GATES.md)
+- [GitHub 发布指南](docs/GITHUB_PUBLISH.md)
+- [贡献指南](CONTRIBUTING.md) · [安全说明](SECURITY.md)
 
-## GitHub 开源与版本控制
-
-仓库采用 Git `main` 主分支和短期功能分支；正式变更通过 Pull Request 和质量检查合并。首个开源候选标签为 `v0.3.0-rc.1`（**预发布，不代表真实 DSH 集成已通过**）。
-
-- [GitHub Desktop 一键发布指南](docs/GITHUB_PUBLISH.md)
-- [参与贡献](CONTRIBUTING.md)
-- [公开仓库检查清单](docs/RELEASE_CHECKLIST.md)
-- [安全报告政策](SECURITY.md)
-
-当前交付仅是已经初始化的**本地 Git 仓库**，并未推送到任何用户的 GitHub 账号；仓库创建和公开动作须由 GitHub 登录用户执行。
+目前文件仅在本地仓库中，**尚未推送到你的 GitHub**。版本 `v0.3.0-rc.2` 为预发布候选。旧版错误命名保留于 Git 历史以便回溯，但当前仓库、服务标识与发布包已更名。

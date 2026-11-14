@@ -1,4 +1,4 @@
-# DEVELOPMENT · DSH SuperAgent 开发规范 V0.2
+# DEVELOPMENT · DSH Desktop Center 开发规范 V0.3
 
 ## 目标和约束
 
@@ -12,7 +12,7 @@
 
 1. 提需求先创建小型设计记录（功能范围/不做的事/目标版本/验收用例/对其他插件的影响）。
 2. 先设计服务契约与错误/未知状态，再写实现；用最小文件系统 fixture 验证。
-3. 一次 PR 对应一个明确的插件功能；不可在 Skills Hub PR 里顺便改签到协议或 DSH 核心。
+3. 一次 PR 对应一个明确的插件功能；不可在 Skills Hub PR 里顺便增加其他 Desktop 写入或 DSH 核心修改。
 4. 先写回归测试，再修问题；每次 bugfix 包含能稳定重现的测试。
 5. 优先保持纯函数和依赖注入（例：传 `filesystem`、`home`），避免全局单例和隐式文件操作。
 6. 变更后跑 `npm run check` 与 `npm test`；依赖安装可用时还要跑 `npm run quality`。
@@ -20,7 +20,7 @@
 
 ## 代码规范
 
-- 新增模块优先 TypeScript + `strict`，但当前 Host 文件仍为 ES Modules JavaScript；**不得用无测试的大规模迁移替代功能开发**。V0.2 仅严格检查 `.d.ts` 公共契约，迁移时逐包扩大类型检查范围。
+- 新增模块优先 TypeScript + `strict`，但当前 Host 文件仍为 ES Modules JavaScript；**不得用无测试的大规模迁移替代功能开发**。V0.3 仅严格检查 `.d.ts` 公共契约，迁移时逐包扩大类型检查范围。
 - 命名：目录 `kebab-case`；函数/变量 `camelCase`；类型/接口 `PascalCase`；常量 `UPPER_SNAKE_CASE`；事件名使用 `area/action`。
 - 使用 async/await；错误结构化（稳定 `code` + 诊断），保留失败来源，不静默吞掉安全问题。
 - 仅在真实必要时增加依赖，优先 Node 标准库。未证实的 DSH API 不可写成已验证代码。
@@ -39,5 +39,5 @@
 ## 版本与兼容
 
 - 保持单插件独立发布；breaking contract 升主版本（或明确 Vn 服务），新增字段默认可选且需兼容旧消费者。
-- 任何字段从 `string` 变成 `null` 或增加 `unknown` 状态均视为契约变化。Skills Hub V0.2 对外 `version: 2`。
+- 任何字段从 `string` 变成 `null` 或增加 `unknown` 状态均视为契约变化。Skills Hub V0.3 对外 `version: 2`。
 - 不将 `app-found` 误写为 `running`、`logged-in`、`connected`；不将 hash 一样误写成同平台可以执行。

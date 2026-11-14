@@ -1,9 +1,9 @@
 ---
 name: dsh-architecture-design
-description: Use before designing, splitting, reviewing or extending DSH SuperAgent Cordis plugins. Define responsibility boundaries, service contracts, dependencies, upgrade safety and acceptance checks before coding.
+description: Use before designing, splitting, reviewing or extending DSH Desktop Center read-only Cordis modules. Define responsibility boundaries, service contracts, dependencies, upgrade safety and acceptance checks before coding.
 ---
 
-# DSH SuperAgent 架构设计
+# DSH Desktop Center 架构设计
 
 ## 何时使用
 
@@ -40,7 +40,7 @@ Provider 与 Consumer：
 
 ## 本项目约束
 
-目标应用只包括 Qoder 国际版、Qoder CN、WorkBuddy、Trae、Codex **Desktop**；不能把 CLI 执行器视为 Desktop 已有会话的替代。积分管理与签到分开，Skills/MCP/Plugins 也分开；SuperAgent 只编排，不直接读写各个业务插件的内部存储。
+目标应用为 Qoder 国际版、Qoder CN、WorkBuddy、Trae、Codex **Desktop**。本项目仅收集本地应用及 Skills 信息并只读展示；不得引入签到、积分、MCP/插件安装、跨 Desktop 任务控制或 SuperAgent 编排。该类功能须归属独立项目。
 
 ## V0.2 治理要求
 

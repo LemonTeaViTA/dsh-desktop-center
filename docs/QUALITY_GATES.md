@@ -25,11 +25,11 @@
 ## 真实 DSH/桌面测试（发布前）
 
 - 记录操作系统、CPU 架构、DSH 版本与每个 Desktop 版本；至少一次离线/权限不足场景。
-- `desktopRegistry` 与 `skillsHub` 按官方 Bundles 流程安装，逐一检查服务 Vn；分别卸载验证依赖降级。
+- 通过一个 `dsh-desktop-center` Bundle 安装、检查 `desktopRegistry`/`skillsHub`/`desktopCenter` 服务；整体卸载验证依赖与路由清理。
 - 只读扫描零写入，对配置不存在、WorkBuddy 未核实路径给明确未知状态。
 - 有 UI 时：Slots 在真实 Client 中存在，Host RPC 权限正确、无泄露凭据，所有 UI 状态可复现。
-- 加写入功能之后：必须有 dry-run、用户确认、原子写入、版本冲突保护和恢复测试；否则阻止发布。
+- 本项目保持只读。任何新增写入能力均超出范围，应停止合并并重新讨论是否属于另一个插件。
 
 ## 禁止的“验证替代品”
 
-不能以 `node --test` 代替 macOS 客户端测试；不能以截图代替交互测试；不能以 Skill 描述代替实际 lint；不能以“目录存在”证明用户已经登录；不能以工具调用成功推断积分到账。
+不能以 `node --test` 代替 macOS 客户端测试；不能以截图代替交互测试；不能以 Skill 描述代替实际 lint；不能以“目录存在”证明用户已经登录；不能把扫描结果视为目标 Desktop 实际支持某项功能。

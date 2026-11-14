@@ -1,14 +1,14 @@
 /* DSH Desktop Center: zero-build, factory-CJS client for DSH 0.2.1 Web/Desktop.
  * Uses public DSH panel slots; there is no mutation of other applications. */
 window.__ModuleLoader__.load({
-  id: 'dsh-superagent-desktop-center',
+  id: 'dsh-desktop-center',
   factory(require) {
     const module = { exports: {} };
     const React = require('react');
     const h = React.createElement;
-    const PAGE_ID = 'superagent-desktop-center';
-    const URL_OVERVIEW = '/api/dsh-superagent/overview';
-    const URL_COMPARE = '/api/dsh-superagent/comparison';
+    const PAGE_ID = 'dsh-desktop-center';
+    const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
+    const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
       .sdc{box-sizing:border-box;padding:28px clamp(18px,4vw,48px) 52px;max-width:1400px;margin:auto;min-height:100%;color:inherit;font-family:inherit}
       .sdc *{box-sizing:border-box}.sdc button,.sdc input{font:inherit}.sdc button{cursor:pointer}
@@ -53,7 +53,7 @@ window.__ModuleLoader__.load({
     `;
 
     function attachStyle() {
-      const id = 'dsh-superagent-desktop-center-style';
+      const id = 'dsh-desktop-center-style';
       const existing = document.getElementById(id);
       if (existing) return () => {};
       const style = document.createElement('style');
@@ -157,7 +157,7 @@ window.__ModuleLoader__.load({
       const tabs = [['desktops','桌面应用'],['skills','Skills 清单'],['diff','跨端差异'],['diagnostics','诊断']];
       return h('main', { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
         h('header', { className: 'sdc-hero' },
-          h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH SUPERAGENT / DESKTOP CENTER'),
+          h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
             h('h1', null, 'Desktop Center'),
             h('p', { className: 'sdc-muted' }, '统一查看桌面应用、Skills 与跨应用配置差异。')),
           h(Pill, { label: 'V0.3 · 只读模式', tone: 'good' })),
@@ -207,7 +207,7 @@ window.__ModuleLoader__.load({
     }
     module.exports.apply = apply;
     module.exports.inject = inject;
-    module.exports.name = 'superagent-desktop-center-ui';
+    module.exports.name = 'dsh-desktop-center-ui';
     return module.exports;
   },
 });

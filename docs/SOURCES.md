@@ -20,7 +20,7 @@
    - https://github.com/yxdwind/agent-skill-manager
    - https://github.com/ccckfg/agent-skills-manager
 
-**不确定性**：WorkBuddy 的准确 Skills 目录、用户实际安装的 Trae 是否为 CN 版、Qoder CN/Global 在现有 Desktop 版本的 `.app` 名称和配置覆盖顺序尚未核实。MCP/Plugins 的自动管理、积分/签到均未开发。
+**不确定性**：WorkBuddy 的准确 Skills 目录、用户实际安装的 Trae 是否为 CN 版、Qoder CN/Global 在现有 Desktop 版本的 `.app` 名称和配置覆盖顺序尚未核实。其他插件功能不属于本项目范围。
 
 5. 外部设计 Skills（未复制代码或安装）:
    - 花叔 Design（MIT）：https://github.com/alchaincyf/huashu-design

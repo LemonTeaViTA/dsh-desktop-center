@@ -1,3 +1,3 @@
 - insert:
-    - id: superagent-desktop-registry
-      name: dsh-superagent-desktop-registry
+    - id: dsh-desktop-center-registry
+      name: dsh-desktop-center-registry

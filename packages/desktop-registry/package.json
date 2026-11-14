@@ -1,5 +1,5 @@
 {
-  "name": "dsh-superagent-desktop-registry",
+  "name": "dsh-desktop-center-registry",
   "version": "0.2.0",
   "description": "Read-only registry for AI desktop applications",
   "type": "module",

@@ -19,7 +19,7 @@ test('single-install manifest declares Host Bundle and Web Client in the same pa
   assert.equal(manifest.exports['./client'], './lib/client.js');
   assert.match(manifest.engines.dsh, /0\.2\.1/);
   const patch = await fs.readFile(new URL('./cordis.patch.yml', moduleRoot), 'utf8');
-  assert.match(patch, /name: dsh-superagent-desktop-center/);
+  assert.match(patch, /name: dsh-desktop-center/);
 });
 
 test('host exposes independent services and the expected authenticated read-only GET routes', async () => {
@@ -83,7 +83,7 @@ test('client factory registers actual DSH main and sidebar panel using public sl
   const clientSource = await fs.readFile(new URL('./lib/client.js', moduleRoot), 'utf8');
   let factory;
   vm.runInNewContext(clientSource, {
-    window: { __ModuleLoader__: { load(value) { assert.equal(value.id, 'dsh-superagent-desktop-center'); factory = value.factory; } } },
+    window: { __ModuleLoader__: { load(value) { assert.equal(value.id, 'dsh-desktop-center'); factory = value.factory; } } },
   });
   assert.equal(typeof factory, 'function');
   const fakeReact = {
@@ -101,6 +101,6 @@ test('client factory registers actual DSH main and sidebar panel using public sl
     register(options, view) { registrations.push({ options, view }); return () => {}; },
   } });
   assert.deepEqual(registrations.map(r => r.options.name).sort(), ['main', 'sidebar.panellist']);
-  assert.equal(registrations.find(r => r.options.name === 'main').options.key, 'superagent-desktop-center');
-  assert.equal(registrations.find(r => r.options.name === 'sidebar.panellist').options.id, 'superagent-desktop-center');
+  assert.equal(registrations.find(r => r.options.name === 'main').options.key, 'dsh-desktop-center');
+  assert.equal(registrations.find(r => r.options.name === 'sidebar.panellist').options.id, 'dsh-desktop-center');
 });

@@ -1,21 +1,17 @@
-# 公开仓库与 V0.3 发布核对清单
+# DSH Desktop Center · 公开发布检查清单（v0.3.0-rc.2）
 
-## 可在当前环境验证的项目
+## 本地验证
 
-- [x] 项目含 MIT LICENSE、原创源码、开发规范和需求边界。
-- [x] 源码及包分离：`packages/desktop-center` 是当前单入口候选 Bundle。
-- [x] Git 仓库已初始化，存在初始提交与 `v0.3.0-rc.1` 标签。
-- [x] 仓库已包含 `.gitignore`，排除本地密钥、环境变量文件、数据库与构建缓存。
-- [x] 已进行常见 Token / 私钥格式的本地字符串扫描，未发现匹配（非独立安全审计）。
+- [x] 修改后离线语法、17 项 Node 测试、公共类型检查与 npm pack 均通过。
+- [x] 源码 `README`、Manifest、Cordis ID、Client ID、只读 API、包文件名统一使用 `dsh-desktop-center`。
+- [x] Git `main` 保留历史且有更名提交；当前标签为 `v0.3.0-rc.2`。
+- [x] `.gitignore`、MIT LICENSE、Issue/PR 模板与安全披露文档齐备。
+- [x] 对当前源码做常见密钥、私钥等模式扫描，未发现常见格式匹配（不代表安全审计完成）。
 
-## 发布前 / 远程验证仍未完成的项目
+## 仍需完成的远程与实机验证
 
-- [ ] 在 GitHub 创建**公开**仓库，确认 remote `origin` 和 `main` 已成功推送。
-- [ ] 检查所有开源内容及第三方参考版权归属；后续复制第三方源码必须保留许可证与署名。
-- [ ] GitHub Actions 真正运行并通过 ESLint、Prettier、TypeScript 和测试。
-- [ ] 生成并审核 `package-lock.json`，CI 改为 `npm ci`（如可用）。
-- [ ] 在真实 macOS DSH Desktop 安装、运行、卸载测试通过。
-- [ ] 核对五个 Desktop 的真实目录识别；未经验证的客户端不得宣称支持自动控制。
-- [ ] 上传 `v0.3.0-rc.1` **预发布版本**，标明功能及已知限制。
-
-**当前完整项目可以公开为开发预览，但不能宣称已完成生产环境验证。**
+- [ ] GitHub Public 仓库 `dsh-desktop-center` 创建成功，`origin` 与 `main` 已推送。
+- [ ] GitHub Actions 的 ESLint、Prettier、类型检查和测试实际运行通过。
+- [ ] 在真实 macOS DSH Desktop 安装、刷新、卸载、权限失败场景均通过。
+- [ ] 核实真实 Qoder/Trae/WorkBuddy/Codex Desktop 配置适配路径。
+- [ ] 仅创建 **Pre-release**，附 `dsh-desktop-center-0.3.0-rc.2.tgz`，明确现有兼容性限制。

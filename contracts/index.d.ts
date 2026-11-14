@@ -48,17 +48,3 @@ export interface DesktopCenterServiceV1 {
   overview(): Promise<DesktopCenterOverviewV1>;
   comparison(): ReturnType<SkillsHubServiceV2['compare']>;
 }
-
-/** Design contracts for future bundles: these are NOT implemented in MVP. */
-export interface CreditsProviderV1 {
-  snapshot(desktopId: DesktopId): Promise<{ currency: string; amount?: number; observedAt: string; provenance: 'verified'|'estimated'|'unknown' }>;
-  expiring(days: number): Promise<Array<{ desktopId: DesktopId; amount: number; expiresAt: string; provenance: string }>>;
-}
-export interface CheckinProviderV1 {
-  status(desktopId: DesktopId): Promise<'unavailable'|'due'|'completed'|'needs-attention'|'unknown'>;
-  run(desktopId: DesktopId): Promise<{ outcome: 'completed'|'skipped'|'failed'|'needs-attention'; verified: boolean }>;
-}
-export interface DesktopBridgeV1 {
-  capabilities(desktopId: DesktopId): Promise<string[]>;
-  request(desktopId: DesktopId, capability: string, request: unknown): Promise<{ ok: boolean; receiptId: string }>;
-}

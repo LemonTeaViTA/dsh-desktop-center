@@ -9,7 +9,7 @@ description: Use when designing or implementing DSH Desktop plugin pages, sideba
 
 1. 查当前 DSH 的 `cordis-plugin-development` 和 UI 插件参考；用 Cordis Inspector 检查 Client Slots、主题色、可用组件与 user-action 通道。
 2. 明确 UI 应安装在 DSH Host/Client 的哪个具体位置；如果没查到 Slot，**不得臆造 API**，先提交草图和待验证项。
-3. 逐项区分真实数据、估算值、未获取状态、样例数据；默认不以“成功”展示未经核验的签到/到账。
+3. 逐项区分真实数据、估算值、未获取状态、样例数据；不把目录发现显示为“客户端正在运行/已连接/已登录”。
 
 ## 信息架构
 
@@ -31,6 +31,6 @@ description: Use when designing or implementing DSH Desktop plugin pages, sideba
 ## 与视觉 Skills 的关系（V0.2）
 
 - 设计顺序：需求/状态与 DSH Slots 核验 → `docs/DESIGN_SYSTEM.md` → 花叔 Design 生成候选方向 → 用户选定 → DSH Host/Client 真正实现 → Unslop 截图审查 → `docs/UI_REVIEW_TEMPLATE.md` 验收。
-- 花叔 Design 决定**候选风格**，Unslop 负责**修改具体视觉问题**。二者都不能修改 DSH API、伪造积分数据或绕过 UI 权限。
+- 花叔 Design 决定**候选风格**，Unslop 负责**修改具体视觉问题**。二者都不能修改 DSH API、伪造状态数据或绕过 UI 权限。
 - 不必每次微调按钮都重新要求花叔生成三个方向；大版本首次建立视觉语言时才做风格探索。
 - 未获取 DSH Client Slots 时只交 Wireframe 和状态清单，不得以原型代替真实集成。

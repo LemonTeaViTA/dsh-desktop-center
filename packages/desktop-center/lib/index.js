@@ -7,13 +7,13 @@
 import { createDesktopRegistry } from './registry/service.js';
 import { createSkillsHub } from './skills/service.js';
 
-export const name = 'superagent-desktop-center';
+export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0';
+export const VERSION = '0.3.0-rc.2';
 export const ROUTES = Object.freeze({
-  overview: '/api/dsh-superagent/overview',
-  comparison: '/api/dsh-superagent/comparison',
-  health: '/api/dsh-superagent/health',
+  overview: '/api/dsh-desktop-center/overview',
+  comparison: '/api/dsh-desktop-center/comparison',
+  health: '/api/dsh-desktop-center/health',
 });
 
 const noCache = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
