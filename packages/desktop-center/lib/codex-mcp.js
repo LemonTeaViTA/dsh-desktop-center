@@ -22,11 +22,51 @@ export function readQoderMcp(file) {
 }
 
 async function readMcpConfig(file, selectServers, getEnabled) {
+  const { status, entries } = await readConfig(file, text => {
+      const configured = selectServers(text) ?? {};
+      if (!configured || typeof configured !== 'object' || Array.isArray(configured)) {
+        throw new Error('Invalid MCP configuration');
+      }
+
+      const servers = [];
+      for (const [name, config] of Object.entries(configured)) {
+        if (!config || typeof config !== 'object' || Array.isArray(config)) {
+          throw new Error('Invalid MCP configuration');
+        }
+        servers.push(getEnabled ? { name, enabled: getEnabled(config) } : { name });
+      }
+      return servers.sort((a, b) => a.name.localeCompare(b.name));
+  });
+  return { status, servers: entries };
+}
+
+export function readQoderPlugins(file) {
+  return readConfig(file, text => {
+    const { version, plugins } = JSON.parse(text);
+    if (version !== 2 || !plugins || typeof plugins !== 'object' || Array.isArray(plugins)) {
+      throw new Error('Unknown Qoder plugin registry format');
+    }
+    const entries = [];
+    for (const [id, records] of Object.entries(plugins)) {
+      if (!Array.isArray(records)) throw new Error('Invalid Qoder plugin records');
+      for (const record of records) {
+        if (record?.scope !== 'user' || record.userVisible === false) continue;
+        const name = typeof record.displayName === 'string' && record.displayName.trim()
+          ? record.displayName.trim() : id;
+        const pluginVersion = typeof record.version === 'string' ? record.version : undefined;
+        entries.push({ name, version: pluginVersion });
+      }
+    }
+    return entries.sort((a, b) => a.name.localeCompare(b.name));
+  });
+}
+
+async function readConfig(file, parse) {
   let handle;
   try {
     handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const stat = await handle.stat();
-    if (!stat.isFile() || stat.size > MAX_CONFIG_BYTES) return { status: 'unreadable', servers: [] };
+    if (!stat.isFile() || stat.size > MAX_CONFIG_BYTES) return { status: 'unreadable', entries: [] };
 
     const buffer = Buffer.alloc(MAX_CONFIG_BYTES + 1);
     let length = 0;
@@ -35,23 +75,11 @@ async function readMcpConfig(file, selectServers, getEnabled) {
       if (!bytesRead) break;
       length += bytesRead;
     }
-    if (length > MAX_CONFIG_BYTES) return { status: 'unreadable', servers: [] };
+    if (length > MAX_CONFIG_BYTES) return { status: 'unreadable', entries: [] };
 
-    const configured = selectServers(buffer.toString('utf8', 0, length)) ?? {};
-    if (!configured || typeof configured !== 'object' || Array.isArray(configured)) {
-      return { status: 'unreadable', servers: [] };
-    }
-
-    const servers = [];
-    for (const [name, config] of Object.entries(configured)) {
-      if (!config || typeof config !== 'object' || Array.isArray(config)) {
-        return { status: 'unreadable', servers: [] };
-      }
-      servers.push(getEnabled ? { name, enabled: getEnabled(config) } : { name });
-    }
-    return { status: 'read', servers: servers.sort((a, b) => a.name.localeCompare(b.name)) };
+    return { status: 'read', entries: parse(buffer.toString('utf8', 0, length)) };
   } catch (error) {
-    return { status: error?.code === 'ENOENT' ? 'missing' : 'unreadable', servers: [] };
+    return { status: error?.code === 'ENOENT' ? 'missing' : 'unreadable', entries: [] };
   } finally {
     await handle?.close();
   }

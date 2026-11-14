@@ -7,12 +7,12 @@
 import { createDesktopRegistry } from './registry/service.js';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { readCodexMcp, readQoderMcp } from './codex-mcp.js';
+import { readCodexMcp, readQoderMcp, readQoderPlugins } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.7';
+export const VERSION = '0.3.0-rc.8';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
@@ -35,7 +35,12 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
         if (platform !== 'darwin') return desktop;
         if (desktop.id === 'codex-desktop') return { ...desktop, mcp: await readMcp() };
         const directory = { 'qoder-global': '.qoder', 'qoder-cn': '.qoder-cn' }[desktop.id];
-        return directory ? { ...desktop, mcp: await readQoderMcp(join(home, directory, 'settings.json')) } : desktop;
+        if (!directory) return desktop;
+        const [mcp, plugins] = await Promise.all([
+          readQoderMcp(join(home, directory, 'settings.json')),
+          readQoderPlugins(join(home, directory, 'plugins', 'installed_plugins_v2.json')),
+        ]);
+        return { ...desktop, mcp, plugins };
       }));
       return {
         version: VERSION,

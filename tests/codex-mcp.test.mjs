@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { readCodexMcp } from '../packages/desktop-center/lib/codex-mcp.js';
@@ -42,9 +42,15 @@ command = "fixture-command"
 test('Qoder editions read their own user settings and return service names only', async t => {
   const home = await mkdtemp(join(tmpdir(), 'dsh-mcp-'));
   t.after(() => rm(home, { recursive: true, force: true }));
-  const { mkdir } = await import('node:fs/promises');
   for (const [path, name] of [['.qoder', 'global'], ['.qoder-cn', 'cn']]) {
-    await mkdir(join(home, path));
+    await mkdir(join(home, path, 'plugins'), { recursive: true });
+    await writeFile(join(home, path, 'plugins', 'installed_plugins_v2.json'), JSON.stringify({
+      version: 2,
+      plugins: {
+        [name]: [{ scope: 'user', displayName: name, version: '1.2.3', installPath: '/private/fixture' }],
+        ignored: [{ scope: 'project' }, { scope: 'user', userVisible: false }],
+      },
+    }));
     await writeFile(join(home, path, 'settings.json'), JSON.stringify({
       mcpServers: { [name]: { url: 'https://example.invalid', env: { TOKEN: 'fixture-secret' } } },
     }));
@@ -52,6 +58,10 @@ test('Qoder editions read their own user settings and return service names only'
   const desktops = ['qoder-global', 'qoder-cn'].map(id => ({ id, skills: [], appPaths: [], diagnostics: [] }));
   const center = createDesktopCenter({ home, platform: 'darwin', hub: { inventory: async () => ({ desktops }) } });
   const overview = await center.overview();
+  assert.deepEqual(overview.desktops.map(({ plugins }) => plugins), [
+    { status: 'read', entries: [{ name: 'global', version: '1.2.3' }] },
+    { status: 'read', entries: [{ name: 'cn', version: '1.2.3' }] },
+  ]);
   assert.deepEqual(overview.desktops.map(({ mcp }) => mcp), [
     { status: 'read', servers: [{ name: 'global' }] },
     { status: 'read', servers: [{ name: 'cn' }] },
