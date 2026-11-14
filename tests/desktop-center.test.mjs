@@ -54,7 +54,15 @@ test('overview reports real scan statistics but does not treat config dirs as ru
     const skill = path.join(home, '.qoder/skills', 'audit');
     await fs.mkdir(skill, { recursive: true });
     await fs.writeFile(path.join(skill, 'SKILL.md'), '---\nname: audit\n---\nRead only.\n');
-    const registry = createDesktopRegistry({ home, platform: 'darwin' });
+    const registry = createDesktopRegistry({
+      home, platform: 'darwin',
+      filesystem: { stat(file) {
+        if (file.startsWith('/Applications/')) {
+          throw Object.assign(new Error('System applications are outside the test fixture'), { code: 'ENOENT' });
+        }
+        return fs.stat(file);
+      } },
+    });
     const center = createDesktopCenter({ registry, hub: createSkillsHub({ registry, scanOptions: { home } }), platform: 'darwin' });
     const overview = await center.overview();
     assert.equal(overview.summary.desktopCount, 5);

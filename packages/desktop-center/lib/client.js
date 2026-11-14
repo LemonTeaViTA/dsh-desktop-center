@@ -10,7 +10,7 @@ window.__ModuleLoader__.load({
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
-      .sdc{box-sizing:border-box;padding:28px clamp(18px,4vw,48px) 52px;max-width:1400px;margin:auto;min-height:100%;color:inherit;font-family:inherit}
+      .sdc{box-sizing:border-box;padding:28px clamp(18px,4vw,48px) 52px;max-width:1400px;margin:0 auto;width:100%;flex:1 1 0%;min-height:0;max-height:100%;overflow:auto;color:inherit;font-family:inherit}
       .sdc *{box-sizing:border-box}.sdc button,.sdc input{font:inherit}.sdc button{cursor:pointer}
       .sdc-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
       .sdc-eyebrow{text-transform:uppercase;font-size:11px;font-weight:650;letter-spacing:.11em;opacity:.58}
@@ -86,7 +86,7 @@ window.__ModuleLoader__.load({
         h('ul', { className: 'sdc-list' },
           ...desktop.appPaths.map(p => h('li', { key: 'app:' + p }, h('span', { className: 'sdc-path' }, p), h(Pill, { label: '应用' }))),
           ...roots.slice(0, 5).map(root => h('li', { key: 'root:' + root.path },
-            h('span', { className: 'sdc-path' }, h('span', { className: 'sdc-ind', 'data-on': String(root.exists) }), root.path),
+            h('span', { className: 'sdc-path' }, h('span', { className: 'sdc-ind', 'data-on': String(root.exists) }), root.path, root.scope === 'shared' ? '（共享）' : ''),
             h('span', { className: 'sdc-muted' }, root.exists ? '已发现' : '不存在'))),
           ...(desktop.appPaths.length === 0 && roots.length === 0 ? [h('li', { key: 'none', className: 'sdc-muted' }, '尚无已验证的配置路径')] : [])),
         ...(desktop.notes || []).map((note, i) => h('p', { key: i, className: 'sdc-muted', style: { marginTop: 10 } }, note)));
@@ -155,7 +155,7 @@ window.__ModuleLoader__.load({
       const matching = desktops.filter(d => [d.label, d.id, d.status].join(' ').toLowerCase().includes(query));
       const stat = overview?.summary;
       const tabs = [['desktops','桌面应用'],['skills','Skills 清单'],['diff','跨端差异'],['diagnostics','诊断']];
-      return h('main', { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
+      return h('main', { className: 'sdc', tabIndex: 0, 'aria-label': 'Desktop Center 管理面板' },
         h('header', { className: 'sdc-hero' },
           h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
             h('h1', null, 'Desktop Center'),
@@ -164,8 +164,8 @@ window.__ModuleLoader__.load({
         h('section', { className: 'sdc-stats', 'aria-label': '扫描统计' },
           ...[
             [stat?.desktopCount ?? '—', 'Desktop 目标'],
-            [stat?.installedAppCount ?? '—', '检测到的应用'],
-            [stat?.skillOccurrences ?? '—', 'Skills 安装记录'],
+            [stat?.installedAppCount ?? '—', '发现应用的目标'],
+            [stat?.skillOccurrences ?? '—', 'Skills 扫描记录'],
             [stat?.diagnosticCount ?? '—', '扫描诊断'],
           ].map(([n,label]) => h('div', { className: 'sdc-stat', key: label }, h('strong', null, String(n)), h('span', null, label)))),
         h('div', { className: 'sdc-toolbar' },

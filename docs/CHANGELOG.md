@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.3.0-rc.3
+
+- 修复 DSH 主面板裁剪长内容时无法纵向滚动的问题。
+- 识别 Bundle ID 为 `com.openai.codex` 的 ChatGPT.app，并按实际目录去重应用安装位置。
+- 明确应用目标数与 Skills 扫描记录的统计口径，标记共享目录。
+
 ## v0.3.0-rc.2 — 2026-11-14 · Correct product scope and naming
 
 - 正式更名为 **DSH Desktop Center**，GitHub 仓库建议名 `dsh-desktop-center`，npm 包名 `dsh-desktop-center`。

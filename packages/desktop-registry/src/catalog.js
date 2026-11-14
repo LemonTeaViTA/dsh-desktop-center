@@ -35,7 +35,8 @@ export const DESKTOP_CATALOG = Object.freeze([
   },
   {
     id: 'codex-desktop', label: 'Codex Desktop',
-    appNames: ['Codex.app'],
+    appNames: ['Codex.app', 'ChatGPT.app'],
+    chatGPTBundleId: 'com.openai.codex',
     skillRoots: [
       { relative: '.agents/skills', scope: 'shared', evidence: 'official' },
       { relative: '.codex/skills', scope: 'legacy', evidence: 'community' },

@@ -4,7 +4,7 @@
 
 本仓库只有一个当前产品：**DSH Desktop Center**。它不是 SuperAgent，不负责任务编排、桌面远程控制、自动签到、积分领取、Skills 安装或 MCP / 原生插件管理。这些若开发，应成为独立项目或独立插件，不属于此仓库的功能承诺。
 
-> 当前版本 **v0.3.0-rc.2（开源候选）**。已有本地自动化测试和 npm 打包验证，**尚未在用户 macOS DSH Desktop 上完成安装及 UI 集成验证**，不是稳定正式版。
+> 当前版本 **v0.3.0-rc.3（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.3 的滚动及识别修复待宿主复测。
 
 ## 已有功能
 
@@ -19,7 +19,7 @@ WorkBuddy 的实际 Skills 路径尚未核实，显示未确定而不是虚构�
 
 ## 安装（待实机验证）
 
-- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.2.tgz`
+- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.3.tgz`
 - **目录安装：** `packages/desktop-center/`（首次建议通过 DSH 官方插件管理器/Creator `plugin_manager install_bundle` 使用本地目录）
 - **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
 - **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。
@@ -60,4 +60,4 @@ docs/                      架构、设计、安装、发布规范
 - [GitHub 发布指南](docs/GITHUB_PUBLISH.md)
 - [贡献指南](CONTRIBUTING.md) · [安全说明](SECURITY.md)
 
-目前文件仅在本地仓库中，**尚未推送到你的 GitHub**。版本 `v0.3.0-rc.2` 为预发布候选。旧版错误命名保留于 Git 历史以便回溯，但当前仓库、服务标识与发布包已更名。
+当前版本为预发布候选，源码见 [GitHub 仓库](https://github.com/LemonTeaViTA/dsh-desktop-center)。

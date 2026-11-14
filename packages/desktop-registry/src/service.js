@@ -1,12 +1,19 @@
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { DESKTOP_CATALOG } from './catalog.js';
 
-async function isDirectory(filepath, filesystem) {
-  try { return (await filesystem.stat(filepath)).isDirectory(); }
+const runFile = promisify(execFile);
+
+async function directoryStat(filepath, filesystem) {
+  try {
+    const stat = await filesystem.stat(filepath);
+    return stat.isDirectory() ? stat : null;
+  }
   catch (error) {
-    if (error?.code === 'ENOENT' || error?.code === 'ENOTDIR') return false;
+    if (error?.code === 'ENOENT' || error?.code === 'ENOTDIR') return null;
     throw error;
   }
 }
@@ -43,10 +50,21 @@ export function createDesktopRegistry({
         ]);
         const candidates = [...new Set([...conventionalPaths, ...normalizeOverride(item.id, appPathsOverrides)])];
         const appPaths = [];
+        const seenDirectories = new Set();
         const notes = [item.note].filter(Boolean);
         for (const candidate of candidates) {
           try {
-            if (await isDirectory(candidate, filesystem)) appPaths.push(candidate);
+            const stat = await directoryStat(candidate, filesystem);
+            if (!stat) continue;
+            if (item.chatGPTBundleId && path.basename(candidate) === 'ChatGPT.app') {
+              const plist = path.join(candidate, 'Contents', 'Info.plist');
+              const { stdout } = await runFile('/usr/bin/plutil', ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', plist]);
+              if (stdout.trim() !== item.chatGPTBundleId) continue;
+            }
+            const identity = `${stat.dev}:${stat.ino}`;
+            if (seenDirectories.has(identity)) continue;
+            seenDirectories.add(identity);
+            appPaths.push(candidate);
           } catch (error) { notes.push(`App path unavailable: ${error?.code ?? 'IO_ERROR'}`); }
         }
         const allRoots = [
@@ -59,7 +77,7 @@ export function createDesktopRegistry({
         ];
         const skillRoots = [];
         for (const root of allRoots) {
-          try { skillRoots.push({ ...root, exists: await isDirectory(root.path, filesystem) }); }
+          try { skillRoots.push({ ...root, exists: Boolean(await directoryStat(root.path, filesystem)) }); }
           catch (error) {
             skillRoots.push({ ...root, exists: false, error: error?.code ?? 'IO_ERROR' });
           }
