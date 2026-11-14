@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readCodexMcp } from '../packages/desktop-center/lib/codex-mcp.js';
+import { readCodexMcp, readZCodeMcp } from '../packages/desktop-center/lib/codex-mcp.js';
 import { createDesktopCenter } from '../packages/desktop-center/lib/index.js';
 
 test('Codex MCP overview exposes only service names and configured enablement', async t => {
@@ -66,4 +66,18 @@ test('Qoder editions read their own user settings and return service names only'
     { status: 'read', servers: [{ name: 'global' }] },
     { status: 'read', servers: [{ name: 'cn' }] },
   ]);
+});
+
+test('ZCode uses shared MCP only when native settings contain no servers', async t => {
+  const home = await mkdtemp(join(tmpdir(), 'dsh-zcode-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  await mkdir(join(home, '.agents'));
+  await mkdir(join(home, '.zcode', 'cli'), { recursive: true });
+  const native = join(home, '.zcode', 'cli', 'config.json');
+  await writeFile(join(home, '.agents', 'mcp.json'), '{"mcpServers":{"shared":{"url":"https://example.invalid"}}}');
+  assert.deepEqual(await readZCodeMcp(home), { status: 'read', servers: [{ name: 'shared' }] });
+  await writeFile(native, '{"mcp":{"servers":{"native":{"enable":false,"command":"fixture"}}}}');
+  assert.deepEqual(await readZCodeMcp(home), { status: 'read', servers: [{ name: 'native', enabled: false }] });
+  await writeFile(native, '{');
+  assert.deepEqual(await readZCodeMcp(home), { status: 'unreadable', servers: [] });
 });

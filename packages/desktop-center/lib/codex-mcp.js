@@ -21,6 +21,14 @@ export function readQoderMcp(file) {
   });
 }
 
+export async function readZCodeMcp(home) {
+  const config = await readMcpConfig(join(home, '.zcode', 'cli', 'config.json'),
+    text => JSON.parse(text).mcp?.servers, server => server.enable !== false);
+  if (config.status === 'unreadable' || config.servers.length) return config;
+  const fallback = await readQoderMcp(join(home, '.agents', 'mcp.json'));
+  return fallback.status === 'missing' ? config : fallback;
+}
+
 async function readMcpConfig(file, selectServers, getEnabled) {
   const { status, entries } = await readConfig(file, text => {
       const configured = selectServers(text) ?? {};

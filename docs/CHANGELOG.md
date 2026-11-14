@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0-rc.10
+
+- 接入 ZCode 用户级 Skills 和 MCP 配置，支持 MCP 的共享配置回退。
+- 跨端差异区分未覆盖、扫描不完整和包内容未完整核验。
+
 ## v0.3.0-rc.9
 
 - 增加 ZCode 和豆包的 macOS 应用发现，按已核实的 Bundle ID 识别。

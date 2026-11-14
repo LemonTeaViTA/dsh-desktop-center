@@ -46,7 +46,7 @@ export const DESKTOP_CATALOG = Object.freeze([
     id: 'zcode', label: 'ZCode',
     appNames: ['ZCode.app'],
     bundleIds: { 'ZCode.app': 'dev.zcode.app' },
-    skillRoots: [],
+    skillRoots: [{ relative: '.zcode/skills', scope: 'user', evidence: 'official' }],
   },
   {
     id: 'doubao', label: '豆包',

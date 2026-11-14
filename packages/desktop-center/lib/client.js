@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.9';
+    const CLIENT_VERSION = '0.3.0-rc.10';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -154,13 +154,16 @@ window.__ModuleLoader__.load({
     function CompareTable({ rows, desktops, search }) {
       const filtered = rows.filter(r => r.name.toLowerCase().includes(search));
       if (!filtered.length) return h(Empty, { title: '没有差异记录', subtitle: '刷新后可查看不同 Desktop 的 Skill 包状态。' });
-      const status = { same: '相同', different: '有差异', missing: '未安装', unknown: '未知', conflict: '冲突' };
+      const status = { same: '相同', different: '有差异', missing: '未扫描到', unknown: '无法比较', conflict: '冲突' };
       return h('div', { className: 'sdc-scroll' }, h('table', { className: 'sdc-table' },
         h('thead', null, h('tr', null, h('th', null, 'Skill'), ...desktops.map(d => h('th', { key: d.id }, d.label)))),
         h('tbody', null, ...filtered.map(r => h('tr', { key: r.name },
           h('td', null, r.name), ...desktops.map(d => {
             const s = r.byDesktopStatus[d.id] || 'unknown';
-            return h('td', { key: d.id }, h(Pill, { label: status[s] || s,
+            const scanFailed = d.skillRoots?.some(root => root.error) || d.diagnostics?.some(issue => !issue.skill);
+            const label = s !== 'unknown' ? status[s] || s :
+              !d.skillRoots?.length ? '未覆盖 Skills' : scanFailed ? '扫描不完整' : '包内容未完整核验';
+            return h('td', { key: d.id }, h(Pill, { label,
               tone: s === 'same' ? 'good' : s === 'different' || s === 'conflict' ? 'warn' : 'muted' }));
           }))))));
     }
