@@ -56,10 +56,11 @@ export function createDesktopRegistry({
           try {
             const stat = await directoryStat(candidate, filesystem);
             if (!stat) continue;
-            if (item.chatGPTBundleId && path.basename(candidate) === 'ChatGPT.app') {
+            const bundleId = item.bundleIds?.[path.basename(candidate)];
+            if (bundleId) {
               const plist = path.join(candidate, 'Contents', 'Info.plist');
               const { stdout } = await runFile('/usr/bin/plutil', ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', plist]);
-              if (stdout.trim() !== item.chatGPTBundleId) continue;
+              if (stdout.trim() !== bundleId) continue;
             }
             const identity = `${stat.dev}:${stat.ino}`;
             if (seenDirectories.has(identity)) continue;

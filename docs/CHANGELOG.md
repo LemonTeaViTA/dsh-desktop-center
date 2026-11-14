@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0-rc.9
+
+- 增加 ZCode 和豆包的 macOS 应用发现，按已核实的 Bundle ID 识别。
+- 跨端差异将未覆盖 Skills 路径的 Desktop 标为未知。
+
 ## v0.3.0-rc.8
 
 - 在 Qoder 国际版和国内版详情中只读展示用户插件安装登记的名称和版本。

@@ -243,6 +243,7 @@ export async function scanRoots(roots, { filesystem = fs, home = os.homedir() } 
 /** Compare entire Skill packages. Incomplete evidence is never reported as same. */
 export function buildSkillMatrix(inventory) {
   const targetIds = inventory.desktops.map((item) => item.id);
+  const uncoveredIds = new Set(inventory.desktops.filter(item => item.skillRoots?.length === 0).map(item => item.id));
   const rows = new Map();
   for (const desktop of inventory.desktops) {
     for (const skill of desktop.skills) {
@@ -269,7 +270,7 @@ export function buildSkillMatrix(inventory) {
       const byDesktopStatus = {};
       for (const id of targetIds) {
         const items = row.byDesktop[id];
-        byDesktopStatus[id] = items.length === 0 ? 'missing' :
+        byDesktopStatus[id] = items.length === 0 ? (uncoveredIds.has(id) ? 'unknown' : 'missing') :
           items.some((item) => !item.packageSha256) ? 'unknown' :
           new Set(items.map((item) => item.packageSha256)).size > 1 ? 'conflict' :
           fingerprints.size > 1 ? 'different' : 'same';

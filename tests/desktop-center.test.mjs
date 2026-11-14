@@ -67,7 +67,7 @@ test('overview reports real scan statistics but does not treat config dirs as ru
       platform: 'darwin', readMcp: async () => ({ status: 'missing', servers: [] }),
     });
     const overview = await center.overview();
-    assert.equal(overview.summary.desktopCount, 5);
+    assert.equal(overview.summary.desktopCount, 7);
     assert.equal(overview.summary.installedAppCount, 0);
     assert.ok(overview.summary.skillOccurrences >= 1);
     assert.equal(overview.desktops.find(d => d.id === 'qoder-global').status, 'configuration-found');

@@ -36,10 +36,22 @@ export const DESKTOP_CATALOG = Object.freeze([
   {
     id: 'codex-desktop', label: 'Codex Desktop',
     appNames: ['Codex.app', 'ChatGPT.app'],
-    chatGPTBundleId: 'com.openai.codex',
+    bundleIds: { 'ChatGPT.app': 'com.openai.codex' },
     skillRoots: [
       { relative: '.agents/skills', scope: 'shared', evidence: 'official' },
       { relative: '.codex/skills', scope: 'legacy', evidence: 'community' },
     ],
+  },
+  {
+    id: 'zcode', label: 'ZCode',
+    appNames: ['ZCode.app'],
+    bundleIds: { 'ZCode.app': 'dev.zcode.app' },
+    skillRoots: [],
+  },
+  {
+    id: 'doubao', label: '豆包',
+    appNames: ['Doubao.app'],
+    bundleIds: { 'Doubao.app': 'com.bot.pc.doubao' },
+    skillRoots: [],
   },
 ]);

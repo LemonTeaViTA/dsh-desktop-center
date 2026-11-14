@@ -4,13 +4,13 @@
 
 本仓库只有一个当前产品：**DSH Desktop Center**。它不是 SuperAgent，不负责任务编排、桌面远程控制、自动签到、积分领取、Skills 安装或 MCP / 原生插件管理。这些若开发，应成为独立项目或独立插件，不属于此仓库的功能承诺。
 
-> 当前版本 **v0.3.0-rc.8（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.8 在 Desktop 详情中加入 Qoder 用户插件清单。
+> 当前版本 **v0.3.0-rc.9（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.9 新增 ZCode 和豆包的本地应用发现。
 
 ## 已有功能
 
 | 模块 | 功能 | 边界 |
 |---|---|---|
-| Desktop Registry | 只读发现 Qoder 国际版 / CN、WorkBuddy、Trae、Codex Desktop 的本地应用候选和配置目录 | 路径存在不代表应用正在运行、账户已登录或接口连通 |
+| Desktop Registry | 只读发现 Qoder 国际版 / CN、WorkBuddy、Trae、Codex Desktop、ZCode 和豆包的本地应用候选和配置目录 | 路径存在不代表应用正在运行、账户已登录或接口连通 |
 | Skills Inventory | 只读扫描 Skills 目录、SKILL.md 元数据、整包 SHA-256 指纹 | 不运行 Skill 中的脚本，不安装/同步/编辑 Skills |
 | Skills Comparison | 按 Desktop 展示 Skills 差异和 `unknown` 状态 | 对无法验证的文件不报告为一致 |
 | Desktop Center 面板 | DSH 侧边栏入口、四个只读标签、搜索、刷新和扫描诊断 | UI 注册只完成离线模拟测试，尚未 Mac 实机验收 |
@@ -19,7 +19,7 @@ WorkBuddy 的实际 Skills 路径尚未核实，显示未确定而不是虚构�
 
 ## 安装（待实机验证）
 
-- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.8.tgz`
+- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.9.tgz`
 - **目录安装：** `packages/desktop-center/`（首次建议通过 DSH 官方插件管理器/Creator `plugin_manager install_bundle` 使用本地目录）
 - **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
 - **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。

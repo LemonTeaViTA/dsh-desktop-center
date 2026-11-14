@@ -11,7 +11,7 @@
 
 ## 核心验收场景
 
-1. 五个 Desktop 未安装或部分安装时，准确展示 `not-detected` / `configuration-found` / `app-found`，不虚构在线/登录状态。
+1. Desktop 未安装或部分安装时，准确展示 `not-detected` / `configuration-found` / `app-found`，不虚构在线/登录状态。
 2. Qoder 国内与国际版本地目录隔离；`~/.agents/skills` 共享目录按设计展示。
 3. Skills 包指纹覆盖普通文件，权限异常/符号链接/超限情况给出 `unknown` 与诊断。
 4. 只读 UI 能显示 Desktop、Skills、差异与诊断，搜索/刷新/空状态正确，异常不泄露敏感路径。

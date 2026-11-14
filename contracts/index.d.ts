@@ -1,5 +1,5 @@
 /** Proposed versioned public contracts. No UI or transport implied. */
-export type DesktopId = 'qoder-global' | 'qoder-cn' | 'workbuddy' | 'trae' | 'codex-desktop';
+export type DesktopId = 'qoder-global' | 'qoder-cn' | 'workbuddy' | 'trae' | 'codex-desktop' | 'zcode' | 'doubao';
 export type DesktopDetection = 'app-found' | 'configuration-found' | 'not-detected' | 'unsupported-os';
 export interface SkillRoot { path: string; scope: 'user'|'shared'|'legacy'|'configured'; evidence: string; exists: boolean; error?: string }
 export interface DesktopRecord {

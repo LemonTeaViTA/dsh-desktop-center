@@ -1,6 +1,6 @@
 {
   "name": "dsh-desktop-center",
-  "version": "0.3.0-rc.8",
+  "version": "0.3.0-rc.9",
   "description": "Read-only DSH Desktop Center: desktop inventory and Skills comparison panel",
   "type": "module",
   "main": "./lib/index.js",

@@ -4,7 +4,7 @@
 
 ## 包含与不包含
 
-**包含**：macOS Desktop 本地发现（Qoder Global / CN、WorkBuddy、Trae、Codex Desktop）、只读 Skills 扫描、跨应用差异、DSH 侧边栏只读 UI、诊断、适配器证据状态。
+**包含**：macOS Desktop 本地发现（Qoder Global / CN、WorkBuddy、Trae、Codex Desktop、ZCode、豆包）、只读 Skills 扫描、跨应用差异、DSH 侧边栏只读 UI、诊断、适配器证据状态。
 
 **不包含**：SuperAgent 任务编排、应用会话控制、CLI 执行器、账号签到、积分、MCP 配置写入、插件安装、Skills 分发或同步。这些若启动应归入与本项目独立的插件，不在此仓库记录其未实现接口或向用户承诺功能。
 

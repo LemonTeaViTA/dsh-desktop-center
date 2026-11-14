@@ -2,7 +2,7 @@
 
 One DSH Bundle package containing a **real Web/Desktop sidebar panel** and separately versioned, read-only services:
 
-- `desktopRegistry` — detects app/config candidates for five AI Desktop targets, not CLI processes.
+- `desktopRegistry` — detects app/config candidates for seven AI Desktop targets, not CLI processes.
 - `skillsHub` — lists Skills, hashes whole packages, and compares differences.
 - `desktopCenter` — aggregate read-only view and authenticated Connection Fetch routes.
 
@@ -13,7 +13,7 @@ Supported target version (declared, not yet machine-tested): **DSH `>=0.2.1-rc.2
 1. Back up the current DSH profile and disable/uninstall the earlier **V0.2** two bundles, if present, to avoid duplicate provider names. Don't edit profile files manually.
 2. In DSH **Plugins → Add plugin**, select a local package path and point to this folder if the current DSH build accepts local directories. Alternatively use Creator mode and tell DSH to call official `plugin_manager` with `action: install_bundle` and `target` set to the **absolute folder path** for this package. Approve the plugin install once it shows the exact package/version and source.
 3. After DSH reports it applied the change (or after its requested restart), a **Desktop Center** entry should appear in the DSH sidebar. Open it and click **重新扫描**.
-4. Check the five Desktop cards, Skills inventory, cross-app comparison and diagnostics. Verify Qoder CN and International roots are separated. Apps with unknown paths should be marked as unverified instead of silently counted as empty.
+4. Check the seven Desktop cards, Skills inventory, cross-app comparison and diagnostics. Verify Qoder CN and International roots are separated. Apps with unknown paths should be marked as unverified instead of silently counted as empty.
 
 For a packaged `.tgz`, supply its absolute path or local `file:` spec if the current Plugin Manager supports tarballs. The folder method is preferable for the very first Mac compatibility test. `npm pack` creates the `.tgz`; it is **not** a double-clickable macOS `.dmg`.
 
