@@ -26,13 +26,14 @@ command = "fixture-command"
     hub: { inventory: async () => ({ desktops }) },
     platform: 'darwin',
     readMcp: () => readCodexMcp(file),
+    home: dir,
   });
   const result = await service.overview();
   assert.deepEqual(result.desktops[0].mcp, {
     status: 'read',
     servers: [{ name: 'example.server', enabled: true }, { name: 'stopped', enabled: false }],
   });
-  assert.equal(result.desktops[1].mcp, undefined);
+  assert.deepEqual(result.desktops[1].mcp, { status: 'missing', servers: [] });
   assert.doesNotMatch(JSON.stringify(result), /fixture-secret|fixture-command|example\.invalid/);
   assert.deepEqual(await readCodexMcp(join(dir, 'absent.toml')), { status: 'missing', servers: [] });
   await writeFile(file, '[mcp_servers.broken');
