@@ -4,11 +4,11 @@
 
 ## 包含与不包含
 
-**包含**：macOS Desktop 本地发现（Qoder Global / CN、WorkBuddy、Trae、Codex Desktop、ZCode、豆包）、只读 Skills 扫描、跨应用差异、DSH 侧边栏只读 UI、诊断、适配器证据状态。
+**包含**：macOS Desktop 本地发现（Qoder Global / CN、WorkBuddy、Trae、Codex Desktop、ZCode、豆包）、Skills 和 MCP 清单、跨应用差异、用户插件或扩展清单、DSH 侧边栏、诊断与已验证的 Qoder 管理操作。
 
 **不包含**：SuperAgent 任务编排、应用会话控制、CLI 执行器、账号签到、积分、插件安装、自动 Skills 分发或同步。这些若启动应归入与本项目独立的插件，不在此仓库记录其未实现接口或向用户承诺功能。
 
-Qoder 两版的用户 Skills 安装与卸载可通过本地管理命令或 DSH Desktop 面板执行。每次明确指定应用和 Skill 目录名；安装从本地目录复制，卸载移入对应应用下的恢复目录。Qoder 两版的用户级 MCP 支持单服务添加和移除，保留文件里的其他配置。
+Qoder 两版的用户 Skills 安装与卸载可通过本地管理命令或 DSH Desktop 面板执行。每次明确指定应用和 Skill 目录名。安装从本地目录复制，卸载移入对应应用下的恢复目录。Qoder 两版的用户级 MCP 支持添加和移除，保留文件里的其他配置。面板支持同时选择两版，按目标显示结果。
 
 ## 实现组成
 
@@ -35,7 +35,7 @@ flowchart TD
 - MCP 管理通过 DSH owner 专用 POST `/api/dsh-desktop-center/mcp/manage`，支持 Qoder 两版的 `settings.json`。写入冲突时返回结果供用户刷新后重新确认。
 - 客户端 ID、侧边栏 ID 与主页面 ID 统一使用 `dsh-desktop-center`。
 
-正式接口见 `contracts/index.d.ts`；真实 DSH 调用兼容性尚待 macOS 实机验证，不能凭本地模拟视为宿主兼容性已经证实。
+正式接口见 `contracts/index.d.ts`，实机验证的 DSH 与应用版本见 [安装验证](INSTALLATION_V0.3.md)。
 
 ## 只读扫描规则
 
@@ -59,7 +59,7 @@ flowchart TD
 
 - 本地 Node 单测、语法和公共类型检查与 npm pack 属于**离线验证**。
 - 正式宣布可用之前，需要在真实 macOS DSH 安装、启动、页面加载、刷新、卸载/HMR、目录权限拒绝等场景验证。
-- 对外发布 `v0.3.0-rc.2` 仅标记预发布，不作为实机验证通过的凭据。
+- 正式版的实机证据及支持边界见 [发布清单](RELEASE_CHECKLIST.md)。
 - 独立的后续功能不应混入本项目接口/Docs；若某信息项变成“修改或控制”，应先重新评审产品边界。
 
 参见 [安装验证](INSTALLATION_V0.3.md)、[Design System](DESIGN_SYSTEM.md)、[完成定义](DEFINITION_OF_DONE.md)。

@@ -2,7 +2,7 @@
 
 **在 DSH 集中发现桌面应用，查看 Skills、MCP 与插件清单，管理 Qoder 两版的用户 Skills 和 MCP 服务。**
 
-> 当前版本 **v0.3.0-rc.20（预发布候选）**。已在 macOS 26.4（arm64）、DSH Desktop 0.2.2-rc.3 验证安装、面板加载、卸载和回退。Qoder 两版仍待完成客户端刷新验收。
+> **v0.3.0** 已在 macOS 26.4（arm64）、DSH Desktop 0.2.2-rc.3 和 Qoder 国际版、国内版 0.5.11 上验收。其他应用的资源覆盖见 [安装与验收指南](docs/INSTALLATION_V0.3.md)。
 
 ## 已有功能
 
@@ -18,10 +18,10 @@ WorkBuddy 扫描独立的用户 Skills 目录。豆包支持应用发现，本�
 
 ## 安装
 
-- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.20.tgz`
-- **GitHub 安装：** 在 DSH 的添加插件页面输入 `https://github.com/LemonTeaViTA/dsh-desktop-center`。本地也可通过官方插件管理器安装 `packages/desktop-center/`。
+- **插件包：** `releases/dsh-desktop-center-0.3.0.tgz`
+- **GitHub 安装：** 在 DSH 的添加插件页面输入 `github:LemonTeaViTA/dsh-desktop-center#main&path:packages/desktop-center`。本地也可安装 `packages/desktop-center/`。
 - **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
-- **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。
+- **宿主声明：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22。完整实机验收覆盖 DSH Desktop 0.2.2-rc.3 和 macOS arm64。
 
 首次安装前备份 DSH Profile；若早期试验过独立 Registry / Skills Bundle，先通过官方管理器禁用以避免服务名冲突。`.tgz` 不是 macOS 双击安装文件，不能手改 DSH Profile 假装安装成功。
 
@@ -34,7 +34,7 @@ npm test
 npm run pack:desktop-center
 ```
 
-使用 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的依赖，再运行 `npm run quality`。候选版 rc.20 已在本地和 [GitHub Actions](https://github.com/LemonTeaViTA/dsh-desktop-center/actions/runs/43701270831) 通过完整检查。
+使用 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的依赖，再运行 `npm run quality`。[GitHub Actions](https://github.com/LemonTeaViTA/dsh-desktop-center/actions/workflows/quality.yml) 记录各提交的结果。
 
 ```text
 packages/desktop-center/   单入口 Bundle（Host + Client + 聚合与管理 API）
@@ -59,6 +59,6 @@ docs/                      架构、设计、安装、发布规范
 - [GitHub 发布指南](docs/GITHUB_PUBLISH.md)
 - [贡献指南](CONTRIBUTING.md) · [安全说明](SECURITY.md)
 
-当前版本为预发布候选，源码见 [GitHub 仓库](https://github.com/LemonTeaViTA/dsh-desktop-center)。
+源码及版本记录见 [GitHub 仓库](https://github.com/LemonTeaViTA/dsh-desktop-center)与 [Releases](https://github.com/LemonTeaViTA/dsh-desktop-center/releases)。
 
 开发进度见 [任务清单](docs/ROADMAP.md)。

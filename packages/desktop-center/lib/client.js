@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     const PAGE_ID = 'dsh-desktop-center';
     const URL_MANAGE_MCP = '/api/dsh-desktop-center/mcp/manage';
     const URL_MANAGE_SKILL = '/api/dsh-desktop-center/skills/manage';
-    const CLIENT_VERSION = '0.3.0-rc.20';
+    const CLIENT_VERSION = '0.3.0';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
