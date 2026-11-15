@@ -5,7 +5,8 @@
  */
 export const DESKTOP_CATALOG = Object.freeze([
   {
-    id: 'qoder-global', label: 'Qoder 国际版',
+    id: 'qoder-global',
+    label: 'Qoder 国际版',
     appNames: ['Qoder.app'],
     skillRoots: [
       { relative: '.qoder/skills', scope: 'user', evidence: 'official' },
@@ -13,7 +14,8 @@ export const DESKTOP_CATALOG = Object.freeze([
     ],
   },
   {
-    id: 'qoder-cn', label: 'Qoder 国内版',
+    id: 'qoder-cn',
+    label: 'Qoder 国内版',
     // Exact .app name may differ by release. Discovered config is only a hint.
     appNames: ['Qoder CN.app', 'QoderCN.app'],
     skillRoots: [
@@ -22,23 +24,27 @@ export const DESKTOP_CATALOG = Object.freeze([
     ],
   },
   {
-    id: 'workbuddy', label: 'WorkBuddy',
+    id: 'workbuddy',
+    label: 'WorkBuddy',
     appNames: ['WorkBuddy.app'],
     skillRoots: [{ relative: '.workbuddy/skills', scope: 'user', evidence: 'community' }],
   },
   {
-    id: 'trae', label: 'Trae Desktop',
+    id: 'trae',
+    label: 'Trae Desktop',
     appNames: ['Trae.app', 'TRAE.app'],
     skillRoots: [{ relative: '.trae/skills', scope: 'user', evidence: 'official' }],
   },
   {
-    id: 'trae-cn', label: 'Trae 国内版',
+    id: 'trae-cn',
+    label: 'Trae 国内版',
     appNames: ['Trae CN.app'],
     bundleIds: { 'Trae CN.app': 'cn.trae.app' },
     skillRoots: [{ relative: '.trae-cn/skills', scope: 'user', evidence: 'local' }],
   },
   {
-    id: 'codex-desktop', label: 'Codex Desktop',
+    id: 'codex-desktop',
+    label: 'Codex Desktop',
     appNames: ['Codex.app', 'ChatGPT.app'],
     bundleIds: { 'ChatGPT.app': 'com.openai.codex' },
     skillRoots: [
@@ -47,13 +53,15 @@ export const DESKTOP_CATALOG = Object.freeze([
     ],
   },
   {
-    id: 'zcode', label: 'ZCode',
+    id: 'zcode',
+    label: 'ZCode',
     appNames: ['ZCode.app'],
     bundleIds: { 'ZCode.app': 'dev.zcode.app' },
     skillRoots: [{ relative: '.zcode/skills', scope: 'user', evidence: 'official' }],
   },
   {
-    id: 'doubao', label: '豆包',
+    id: 'doubao',
+    label: '豆包',
     appNames: ['Doubao.app'],
     bundleIds: { 'Doubao.app': 'com.bot.pc.doubao' },
     skillRoots: [],

@@ -7,30 +7,39 @@ import TOML from '@iarna/toml';
 const MAX_CONFIG_BYTES = 512 * 1024;
 
 export function readCodexMcp(file = join(homedir(), '.codex', 'config.toml')) {
-  return readMcpConfig(file, text => TOML.parse(text).mcp_servers, config => {
-    if (config.enabled !== undefined && typeof config.enabled !== 'boolean') throw new Error('Invalid enabled flag');
-    return config.enabled !== false;
-  });
+  return readMcpConfig(
+    file,
+    (text) => TOML.parse(text).mcp_servers,
+    (config) => {
+      if (config.enabled !== undefined && typeof config.enabled !== 'boolean')
+        throw new Error('Invalid enabled flag');
+      return config.enabled !== false;
+    },
+  );
 }
 
 export function readQoderMcp(file) {
-  return readMcpConfig(file, text => {
+  return readMcpConfig(file, (text) => {
     const settings = JSON.parse(text);
-    if (!settings || typeof settings !== 'object' || Array.isArray(settings)) throw new Error('Invalid settings');
+    if (!settings || typeof settings !== 'object' || Array.isArray(settings))
+      throw new Error('Invalid settings');
     return settings.mcpServers;
   });
 }
 
 export async function readZCodeMcp(home) {
-  const config = await readMcpConfig(join(home, '.zcode', 'cli', 'config.json'),
-    text => JSON.parse(text).mcp?.servers, server => server.enable !== false);
+  const config = await readMcpConfig(
+    join(home, '.zcode', 'cli', 'config.json'),
+    (text) => JSON.parse(text).mcp?.servers,
+    (server) => server.enable !== false,
+  );
   if (config.status === 'unreadable' || config.servers.length) return config;
   const fallback = await readQoderMcp(join(home, '.agents', 'mcp.json'));
   return fallback.status === 'missing' ? config : fallback;
 }
 
 export function readZCodePlugins(home) {
-  return readConfig(join(home, '.zcode', 'cli', 'plugins', 'installed_plugins.json'), text => {
+  return readConfig(join(home, '.zcode', 'cli', 'plugins', 'installed_plugins.json'), (text) => {
     const { version, plugins } = JSON.parse(text);
     if (version !== 1 || !plugins || typeof plugins !== 'object') {
       throw new Error('Unknown ZCode plugin registry format');
@@ -38,8 +47,13 @@ export function readZCodePlugins(home) {
     const entries = [];
     if (Array.isArray(plugins)) {
       for (const record of plugins) {
-        if (!record?.name || typeof record.name !== 'string' || typeof record.version !== 'string' ||
-            !['user', 'workspace'].includes(record.scope) || typeof record.installPath !== 'string') {
+        if (
+          !record?.name ||
+          typeof record.name !== 'string' ||
+          typeof record.version !== 'string' ||
+          !['user', 'workspace'].includes(record.scope) ||
+          typeof record.installPath !== 'string'
+        ) {
           throw new Error('Invalid ZCode plugin record');
         }
         if (record.scope === 'user') entries.push({ name: record.name, version: record.version });
@@ -47,14 +61,17 @@ export function readZCodePlugins(home) {
     } else {
       for (const [id, records] of Object.entries(plugins)) {
         const separator = id.lastIndexOf('@');
-        if (separator < 1 || separator === id.length - 1) throw new Error('Invalid ZCode plugin ID');
+        if (separator < 1 || separator === id.length - 1)
+          throw new Error('Invalid ZCode plugin ID');
         for (const record of Array.isArray(records) ? records : [records]) {
           if (typeof record?.installPath !== 'string' || !record.installPath) {
             throw new Error('Invalid ZCode plugin record');
           }
           if (['local', 'project', 'workspace'].includes(record.scope)) continue;
           const name = id.slice(0, separator);
-          entries.push(typeof record.version === 'string' ? { name, version: record.version } : { name });
+          entries.push(
+            typeof record.version === 'string' ? { name, version: record.version } : { name },
+          );
         }
       }
     }
@@ -63,52 +80,57 @@ export function readZCodePlugins(home) {
 }
 
 async function readMcpConfig(file, selectServers, getEnabled) {
-  const { status, entries } = await readConfig(file, text => {
-      const configured = selectServers(text) ?? {};
-      if (!configured || typeof configured !== 'object' || Array.isArray(configured)) {
+  const { status, entries } = await readConfig(file, (text) => {
+    const configured = selectServers(text) ?? {};
+    if (!configured || typeof configured !== 'object' || Array.isArray(configured)) {
+      throw new Error('Invalid MCP configuration');
+    }
+
+    const servers = [];
+    for (const [name, config] of Object.entries(configured)) {
+      if (!config || typeof config !== 'object' || Array.isArray(config)) {
         throw new Error('Invalid MCP configuration');
       }
-
-      const servers = [];
-      for (const [name, config] of Object.entries(configured)) {
-        if (!config || typeof config !== 'object' || Array.isArray(config)) {
-          throw new Error('Invalid MCP configuration');
-        }
-        servers.push(getEnabled ? { name, enabled: getEnabled(config) } : { name });
-      }
-      return servers.sort((a, b) => a.name.localeCompare(b.name));
+      servers.push(getEnabled ? { name, enabled: getEnabled(config) } : { name });
+    }
+    return servers.sort((a, b) => a.name.localeCompare(b.name));
   });
   return { status, servers: entries };
 }
 
 export function readTraeExtensions(file) {
-  return readConfig(file, text => {
+  return readConfig(file, (text) => {
     const extensions = JSON.parse(text);
     if (!Array.isArray(extensions)) throw new Error('Invalid TRAE extension registry');
-    return extensions.map(extension => {
-      const name = extension?.identifier?.id;
-      const version = extension?.version;
-      if (typeof name !== 'string' || !name || typeof version !== 'string') {
-        throw new Error('Invalid TRAE extension entry');
-      }
-      return { name, version };
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    return extensions
+      .map((extension) => {
+        const name = extension?.identifier?.id;
+        const version = extension?.version;
+        if (typeof name !== 'string' || !name || typeof version !== 'string') {
+          throw new Error('Invalid TRAE extension entry');
+        }
+        return { name, version };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
 }
 
 export function readCodexPlugins(file) {
-  return readConfig(file, text => {
+  return readConfig(file, (text) => {
     const { plugins = {} } = TOML.parse(text);
-    if (!plugins || typeof plugins !== 'object' || Array.isArray(plugins)) throw new Error('Invalid plugins');
-    return Object.entries(plugins).map(([name, config]) => {
-      if (typeof config?.enabled !== 'boolean') throw new Error('Invalid plugin enablement');
-      return { name, enabled: config.enabled };
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    if (!plugins || typeof plugins !== 'object' || Array.isArray(plugins))
+      throw new Error('Invalid plugins');
+    return Object.entries(plugins)
+      .map(([name, config]) => {
+        if (typeof config?.enabled !== 'boolean') throw new Error('Invalid plugin enablement');
+        return { name, enabled: config.enabled };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   });
 }
 
 export function readQoderPlugins(file) {
-  return readConfig(file, text => {
+  return readConfig(file, (text) => {
     const { version, plugins } = JSON.parse(text);
     if (version !== 2 || !plugins || typeof plugins !== 'object' || Array.isArray(plugins)) {
       throw new Error('Unknown Qoder plugin registry format');
@@ -118,8 +140,10 @@ export function readQoderPlugins(file) {
       if (!Array.isArray(records)) throw new Error('Invalid Qoder plugin records');
       for (const record of records) {
         if (record?.scope !== 'user' || record.userVisible === false) continue;
-        const name = typeof record.displayName === 'string' && record.displayName.trim()
-          ? record.displayName.trim() : id;
+        const name =
+          typeof record.displayName === 'string' && record.displayName.trim()
+            ? record.displayName.trim()
+            : id;
         const pluginVersion = typeof record.version === 'string' ? record.version : undefined;
         entries.push({ name, version: pluginVersion });
       }
@@ -133,7 +157,8 @@ async function readConfig(file, parse) {
   try {
     handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
     const stat = await handle.stat();
-    if (!stat.isFile() || stat.size > MAX_CONFIG_BYTES) return { status: 'unreadable', entries: [] };
+    if (!stat.isFile() || stat.size > MAX_CONFIG_BYTES)
+      return { status: 'unreadable', entries: [] };
 
     const buffer = Buffer.alloc(MAX_CONFIG_BYTES + 1);
     let length = 0;

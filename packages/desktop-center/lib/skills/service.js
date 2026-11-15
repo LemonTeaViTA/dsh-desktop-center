@@ -18,7 +18,11 @@ export function createSkillsHub({ registry, scanner = scanRoots, scanOptions = {
     },
     async compare() {
       const inventory = await this.inventory();
-      return { scannedAt: inventory.scannedAt, matrix: buildSkillMatrix(inventory), desktops: inventory.desktops.map((d) => ({ id: d.id, status: d.status })) };
+      return {
+        scannedAt: inventory.scannedAt,
+        matrix: buildSkillMatrix(inventory),
+        desktops: inventory.desktops.map((d) => ({ id: d.id, status: d.status })),
+      };
     },
   });
 }

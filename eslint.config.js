@@ -6,7 +6,10 @@ export default [
     ignores: ['node_modules/**', 'dist/**', 'coverage/**'],
   },
   js.configs.recommended,
-  { files: ['packages/desktop-center/lib/client.js'], languageOptions: { globals: globals.browser } },
+  {
+    files: ['packages/desktop-center/lib/client.js'],
+    languageOptions: { globals: globals.browser },
+  },
   {
     files: ['**/*.js', '**/*.mjs'],
     languageOptions: { globals: globals.node },

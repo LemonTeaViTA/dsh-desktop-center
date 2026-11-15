@@ -11,8 +11,7 @@ async function directoryStat(filepath, filesystem) {
   try {
     const stat = await filesystem.stat(filepath);
     return stat.isDirectory() ? stat : null;
-  }
-  catch (error) {
+  } catch (error) {
     if (error?.code === 'ENOENT' || error?.code === 'ENOTDIR') return null;
     throw error;
   }
@@ -34,12 +33,18 @@ export function createDesktopRegistry({
 
   const service = {
     version: 1,
-    targets() { return catalog.map(({ id, label }) => ({ id, label })); },
+    targets() {
+      return catalog.map(({ id, label }) => ({ id, label }));
+    },
     async listDesktops() {
       if (platform !== 'darwin') {
         return catalog.map((item) => ({
-          id: item.id, label: item.label, status: 'unsupported-os',
-          appPaths: [], skillRoots: [], notes: [item.note].filter(Boolean),
+          id: item.id,
+          label: item.label,
+          status: 'unsupported-os',
+          appPaths: [],
+          skillRoots: [],
+          notes: [item.note].filter(Boolean),
         }));
       }
       const entries = [];
@@ -48,7 +53,9 @@ export function createDesktopRegistry({
           path.join('/Applications', name),
           path.join(home, 'Applications', name),
         ]);
-        const candidates = [...new Set([...conventionalPaths, ...normalizeOverride(item.id, appPathsOverrides)])];
+        const candidates = [
+          ...new Set([...conventionalPaths, ...normalizeOverride(item.id, appPathsOverrides)]),
+        ];
         const appPaths = [];
         const seenDirectories = new Set();
         const notes = [item.note].filter(Boolean);
@@ -59,33 +66,53 @@ export function createDesktopRegistry({
             const bundleId = item.bundleIds?.[path.basename(candidate)];
             if (bundleId) {
               const plist = path.join(candidate, 'Contents', 'Info.plist');
-              const { stdout } = await runFile('/usr/bin/plutil', ['-extract', 'CFBundleIdentifier', 'raw', '-o', '-', plist]);
+              const { stdout } = await runFile('/usr/bin/plutil', [
+                '-extract',
+                'CFBundleIdentifier',
+                'raw',
+                '-o',
+                '-',
+                plist,
+              ]);
               if (stdout.trim() !== bundleId) continue;
             }
             const identity = `${stat.dev}:${stat.ino}`;
             if (seenDirectories.has(identity)) continue;
             seenDirectories.add(identity);
             appPaths.push(candidate);
-          } catch (error) { notes.push(`App path unavailable: ${error?.code ?? 'IO_ERROR'}`); }
+          } catch (error) {
+            notes.push(`App path unavailable: ${error?.code ?? 'IO_ERROR'}`);
+          }
         }
         const allRoots = [
           ...item.skillRoots.map((root) => ({
-            path: path.join(home, root.relative), scope: root.scope, evidence: root.evidence,
+            path: path.join(home, root.relative),
+            scope: root.scope,
+            evidence: root.evidence,
           })),
           ...normalizeOverride(item.id, skillRootsOverrides).map((root) => ({
-            path: path.resolve(root), scope: 'configured', evidence: 'user-override',
+            path: path.resolve(root),
+            scope: 'configured',
+            evidence: 'user-override',
           })),
         ];
         const skillRoots = [];
         for (const root of allRoots) {
-          try { skillRoots.push({ ...root, exists: Boolean(await directoryStat(root.path, filesystem)) }); }
-          catch (error) {
+          try {
+            skillRoots.push({
+              ...root,
+              exists: Boolean(await directoryStat(root.path, filesystem)),
+            });
+          } catch (error) {
             skillRoots.push({ ...root, exists: false, error: error?.code ?? 'IO_ERROR' });
           }
         }
         // 'configuration-found' is *not* equivalent to app installation or login.
-        const status = appPaths.length ? 'app-found' :
-          skillRoots.some((r) => r.exists) ? 'configuration-found' : 'not-detected';
+        const status = appPaths.length
+          ? 'app-found'
+          : skillRoots.some((r) => r.exists)
+            ? 'configuration-found'
+            : 'not-detected';
         entries.push({ id: item.id, label: item.label, status, appPaths, skillRoots, notes });
       }
       return entries;

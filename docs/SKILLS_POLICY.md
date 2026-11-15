@@ -8,15 +8,15 @@
 
 ## 路由
 
-| 阶段 | 权威来源/Skill | 必须产出 |
-|---|---|---|
-| DSH 扩展点、装载、生命周期 | DSH 官方 `cordis-plugin-development` | 经 API Inspect 验证的 Host/Client 接口 |
-| 任务边界 | `dsh-architecture-design` | 模块关系、契约版本、风险与非目标 |
-| Mac Desktop 适配 | `dsh-desktop-adapter-development` | 证据来源、能力矩阵、未知项 |
-| 页面信息架构 | `dsh-ui-design` | 状态清单、数据来源、交互验收项 |
-| 视觉方向 | 花叔 Design（外部 Skill） | 多方向与选型说明；不得直接修改真实 Host API |
-| 视觉打磨 | Unslop（外部 Skill） | 截图审查问题、修改清单与复核 |
-| 代码与发版验证 | `dsh-plugin-testing` | 测试证据和 DoD 状态 |
+| 阶段                       | 权威来源/Skill                       | 必须产出                                    |
+| -------------------------- | ------------------------------------ | ------------------------------------------- |
+| DSH 扩展点、装载、生命周期 | DSH 官方 `cordis-plugin-development` | 经 API Inspect 验证的 Host/Client 接口      |
+| 任务边界                   | `dsh-architecture-design`            | 模块关系、契约版本、风险与非目标            |
+| Mac Desktop 适配           | `dsh-desktop-adapter-development`    | 证据来源、能力矩阵、未知项                  |
+| 页面信息架构               | `dsh-ui-design`                      | 状态清单、数据来源、交互验收项              |
+| 视觉方向                   | 花叔 Design（外部 Skill）            | 多方向与选型说明；不得直接修改真实 Host API |
+| 视觉打磨                   | Unslop（外部 Skill）                 | 截图审查问题、修改清单与复核                |
+| 代码与发版验证             | `dsh-plugin-testing`                 | 测试证据和 DoD 状态                         |
 
 ## 优先级与冲突
 

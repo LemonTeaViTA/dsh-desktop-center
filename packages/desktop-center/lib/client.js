@@ -9,7 +9,7 @@ window.__ModuleLoader__.load({
     const PAGE_ID = 'dsh-desktop-center';
     const URL_MANAGE_MCP = '/api/dsh-desktop-center/mcp/manage';
     const URL_MANAGE_SKILL = '/api/dsh-desktop-center/skills/manage';
-    const CLIENT_VERSION = '0.3.0-rc.19';
+    const CLIENT_VERSION = '0.3.0-rc.20';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -92,32 +92,92 @@ window.__ModuleLoader__.load({
       return h('span', { className: 'sdc-pill', 'data-tone': tone }, label);
     }
     function Empty({ title, subtitle }) {
-      return h('div', { className: 'sdc-empty' },
-        h('strong', null, title), h('p', { className: 'sdc-muted' }, subtitle));
+      return h(
+        'div',
+        { className: 'sdc-empty' },
+        h('strong', null, title),
+        h('p', { className: 'sdc-muted' }, subtitle),
+      );
     }
     function Card({ desktop, onOpen }) {
       const state = statusInfo(desktop.status);
       const count = desktop.skillRoots.length ? desktop.skills.length + ' 个 Skills' : '';
-      const serviceCount = desktop.mcp?.status === 'read' ? desktop.mcp.servers.length + ' 个 MCP 服务' : '';
-      return h('article', { className: 'sdc-card' },
-        h('div', { className: 'sdc-head' },
-          h('div', null, h('h2', { className: 'sdc-name' }, desktop.label),
-            count || serviceCount ? h('p', { className: 'sdc-kicker sdc-muted' }, [count, serviceCount].filter(Boolean).join(' · ')) : null),
-          h(Pill, { label: state.text, tone: state.tone })),
-        h('button', { type: 'button', className: 'sdc-btn', id: 'sdc-open-' + desktop.id,
-          'aria-label': '查看 ' + desktop.label + ' 详情', onClick: onOpen }, '查看详情'));
+      const serviceCount =
+        desktop.mcp?.status === 'read' ? desktop.mcp.servers.length + ' 个 MCP 服务' : '';
+      return h(
+        'article',
+        { className: 'sdc-card' },
+        h(
+          'div',
+          { className: 'sdc-head' },
+          h(
+            'div',
+            null,
+            h('h2', { className: 'sdc-name' }, desktop.label),
+            count || serviceCount
+              ? h(
+                  'p',
+                  { className: 'sdc-kicker sdc-muted' },
+                  [count, serviceCount].filter(Boolean).join(' · '),
+                )
+              : null,
+          ),
+          h(Pill, { label: state.text, tone: state.tone }),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'sdc-btn',
+            id: 'sdc-open-' + desktop.id,
+            'aria-label': '查看 ' + desktop.label + ' 详情',
+            onClick: onOpen,
+          },
+          '查看详情',
+        ),
+      );
     }
     function DesktopPaths({ desktop }) {
       const roots = desktop.skillRoots || [];
-      return h('details', { className: 'sdc-details' },
+      return h(
+        'details',
+        { className: 'sdc-details' },
         h('summary', null, '应用与扫描路径'),
-        h('ul', { className: 'sdc-list' },
-          ...desktop.appPaths.map(p => h('li', { key: 'app:' + p }, h('span', { className: 'sdc-path' }, p), h(Pill, { label: '应用' }))),
-          ...roots.map(root => h('li', { key: 'root:' + root.path },
-            h('span', { className: 'sdc-path' }, h('span', { className: 'sdc-ind', 'data-on': String(root.exists) }), root.path, root.scope === 'shared' ? '（共享）' : ''),
-            h('span', { className: 'sdc-muted' }, root.error ? '读取失败' : root.exists ? '已发现' : '未找到'))),
-          ...(desktop.appPaths.length === 0 && roots.length === 0 ? [h('li', { key: 'none', className: 'sdc-muted' }, '尚无已验证的配置路径')] : [])),
-        ...(desktop.notes || []).map(note => h('p', { key: note, className: 'sdc-muted' }, note)));
+        h(
+          'ul',
+          { className: 'sdc-list' },
+          ...desktop.appPaths.map((p) =>
+            h(
+              'li',
+              { key: 'app:' + p },
+              h('span', { className: 'sdc-path' }, p),
+              h(Pill, { label: '应用' }),
+            ),
+          ),
+          ...roots.map((root) =>
+            h(
+              'li',
+              { key: 'root:' + root.path },
+              h(
+                'span',
+                { className: 'sdc-path' },
+                h('span', { className: 'sdc-ind', 'data-on': String(root.exists) }),
+                root.path,
+                root.scope === 'shared' ? '（共享）' : '',
+              ),
+              h(
+                'span',
+                { className: 'sdc-muted' },
+                root.error ? '读取失败' : root.exists ? '已发现' : '未找到',
+              ),
+            ),
+          ),
+          ...(desktop.appPaths.length === 0 && roots.length === 0
+            ? [h('li', { key: 'none', className: 'sdc-muted' }, '尚无已验证的配置路径')]
+            : []),
+        ),
+        ...(desktop.notes || []).map((note) => h('p', { key: note, className: 'sdc-muted' }, note)),
+      );
     }
     const skillIssueLabels = {
       HIDDEN_CONTENT_UNVERIFIED: '隐藏文件未参与比较',
@@ -132,116 +192,320 @@ window.__ModuleLoader__.load({
       EPERM: '系统阻止了读取',
     };
     function SkillsList({ desktops, search, showDesktop = true, onRemove }) {
-      const groups = desktops.map(desktop => ({
-        desktop,
-        skills: desktop.skills.filter(skill =>
-          [skill.name, skill.directoryName, skill.description, desktop.label].some(value =>
-            value?.toLowerCase().includes(search))),
-      })).filter(({ desktop, skills }) =>
-        !showDesktop || !search || skills.length || desktop.label.toLowerCase().includes(search));
-      if (!groups.length) return h(Empty, { title: '没有匹配的 Skills', subtitle: '试试 Skill 名称、简介或桌面应用名称。' });
+      const groups = desktops
+        .map((desktop) => ({
+          desktop,
+          skills: desktop.skills.filter((skill) =>
+            [skill.name, skill.directoryName, skill.description, desktop.label].some((value) =>
+              value?.toLowerCase().includes(search),
+            ),
+          ),
+        }))
+        .filter(
+          ({ desktop, skills }) =>
+            !showDesktop ||
+            !search ||
+            skills.length ||
+            desktop.label.toLowerCase().includes(search),
+        );
+      if (!groups.length)
+        return h(Empty, {
+          title: '没有匹配的 Skills',
+          subtitle: '试试 Skill 名称、简介或桌面应用名称。',
+        });
       return groups.map(({ desktop, skills }) => {
         const headingId = 'sdc-skills-' + desktop.id;
-        const emptyMessage = desktop.skills.length && search ? '没有匹配的 Skills。' :
-          !desktop.skillRoots.length ? '当前未覆盖此应用的 Skills 路径。' :
-          desktop.skillRoots.some(root => root.error) || desktop.diagnostics.length ? 'Skills 扫描不完整，请查看诊断。' :
-          desktop.skillRoots.some(root => root.exists) ? '已扫描的目录中没有 Skills。' : '未找到已知的 Skills 目录。';
-        return h('section', { key: desktop.id, className: 'sdc-skill-group', 'aria-labelledby': headingId },
-          h('div', { className: 'sdc-skill-heading' },
+        const emptyMessage =
+          desktop.skills.length && search
+            ? '没有匹配的 Skills。'
+            : !desktop.skillRoots.length
+              ? '当前未覆盖此应用的 Skills 路径。'
+              : desktop.skillRoots.some((root) => root.error) || desktop.diagnostics.length
+                ? 'Skills 扫描不完整，请查看诊断。'
+                : desktop.skillRoots.some((root) => root.exists)
+                  ? '已扫描的目录中没有 Skills。'
+                  : '未找到已知的 Skills 目录。';
+        return h(
+          'section',
+          { key: desktop.id, className: 'sdc-skill-group', 'aria-labelledby': headingId },
+          h(
+            'div',
+            { className: 'sdc-skill-heading' },
             h('h2', { id: headingId }, showDesktop ? desktop.label : 'Skills'),
-            skills.length ? h('span', { className: 'sdc-muted' }, skills.length + ' 条记录') : null),
-          skills.length ? h('ul', { className: 'sdc-skill-list' }, ...skills.map(skill => {
-            const issues = desktop.diagnostics.filter(issue =>
-              issue.root === skill.root && issue.skill === skill.directoryName);
-            const incomplete = skill.fingerprintStatus !== 'complete';
-            return h('li', { key: skill.file, className: 'sdc-skill-item' },
-              h('h3', null, skill.name),
-              !showDesktop && skill.scope === 'shared'
-                ? h('p', { className: 'sdc-muted' }, '共享 Skills 目录') : null,
-              h('p', { className: 'sdc-muted' }, skill.description?.trim() || '暂无简介'),
-              onRemove && skill.scope === 'user' ? h('button', {
-                type: 'button', className: 'sdc-btn', onClick: () => onRemove(skill.directoryName),
-                'aria-label': '卸载 ' + skill.name,
-              }, '卸载') : null,
-              incomplete || issues.length ? h('details', null,
-                h('summary', null, incomplete ? '部分内容无法比较' : '查看扫描异常'),
-                issues.length ? h('ul', null, ...issues.map(({ reason }, index) =>
-                  h('li', { key: index }, skillIssueLabels[reason] || '部分文件无法读取（' + reason + '）'))) : null) : null);
-          })) : h('p', { className: 'sdc-muted' }, emptyMessage));
+            skills.length ? h('span', { className: 'sdc-muted' }, skills.length + ' 条记录') : null,
+          ),
+          skills.length
+            ? h(
+                'ul',
+                { className: 'sdc-skill-list' },
+                ...skills.map((skill) => {
+                  const issues = desktop.diagnostics.filter(
+                    (issue) => issue.root === skill.root && issue.skill === skill.directoryName,
+                  );
+                  const incomplete = skill.fingerprintStatus !== 'complete';
+                  return h(
+                    'li',
+                    { key: skill.file, className: 'sdc-skill-item' },
+                    h('h3', null, skill.name),
+                    !showDesktop && skill.scope === 'shared'
+                      ? h('p', { className: 'sdc-muted' }, '共享 Skills 目录')
+                      : null,
+                    h('p', { className: 'sdc-muted' }, skill.description?.trim() || '暂无简介'),
+                    onRemove && skill.scope === 'user'
+                      ? h(
+                          'button',
+                          {
+                            type: 'button',
+                            className: 'sdc-btn',
+                            onClick: () => onRemove(skill.directoryName),
+                            'aria-label': '卸载 ' + skill.name,
+                          },
+                          '卸载',
+                        )
+                      : null,
+                    incomplete || issues.length
+                      ? h(
+                          'details',
+                          null,
+                          h('summary', null, incomplete ? '部分内容无法比较' : '查看扫描异常'),
+                          issues.length
+                            ? h(
+                                'ul',
+                                null,
+                                ...issues.map(({ reason }, index) =>
+                                  h(
+                                    'li',
+                                    { key: index },
+                                    skillIssueLabels[reason] ||
+                                      '部分文件无法读取（' + reason + '）',
+                                  ),
+                                ),
+                              )
+                            : null,
+                        )
+                      : null,
+                  );
+                }),
+              )
+            : h('p', { className: 'sdc-muted' }, emptyMessage),
+        );
       });
     }
     function CompareTable({ rows, desktops, search }) {
-      const filtered = rows.filter(r => r.name.toLowerCase().includes(search));
-      if (!filtered.length) return h(Empty, { title: '没有差异记录', subtitle: '刷新后可查看不同 Desktop 的 Skill 包状态。' });
-      const status = { same: '相同', different: '有差异', missing: '未扫描到', unknown: '无法比较', conflict: '冲突' };
-      return h('div', { className: 'sdc-scroll', role: 'region', tabIndex: 0, 'aria-label': 'Skills 差异对比表' }, h('table', { className: 'sdc-table' },
-        h('thead', null, h('tr', null, h('th', null, 'Skill'), ...desktops.map(d => h('th', { key: d.id }, d.label)))),
-        h('tbody', null, ...filtered.map(r => h('tr', { key: r.name },
-          h('td', null, r.name), ...desktops.map(d => {
-            const s = r.byDesktopStatus[d.id] || 'unknown';
-            const scanFailed = d.skillRoots?.some(root => root.error) || d.diagnostics?.some(issue => !issue.skill);
-            const label = s !== 'unknown' ? status[s] || s :
-              !d.skillRoots?.length ? '未覆盖 Skills' : scanFailed ? '扫描不完整' :
-              r.byDesktop?.[d.id]?.length ? '包内容未完整核验' : '未能确认此 Skill';
-            return h('td', { key: d.id }, h(Pill, { label,
-              tone: s === 'same' ? 'good' : s === 'different' || s === 'conflict' ? 'warn' : 'muted' }));
-          }))))));
+      const filtered = rows.filter((r) => r.name.toLowerCase().includes(search));
+      if (!filtered.length)
+        return h(Empty, {
+          title: '没有差异记录',
+          subtitle: '刷新后可查看不同 Desktop 的 Skill 包状态。',
+        });
+      const status = {
+        same: '相同',
+        different: '有差异',
+        missing: '未扫描到',
+        unknown: '无法比较',
+        conflict: '冲突',
+      };
+      return h(
+        'div',
+        { className: 'sdc-scroll', role: 'region', tabIndex: 0, 'aria-label': 'Skills 差异对比表' },
+        h(
+          'table',
+          { className: 'sdc-table' },
+          h(
+            'thead',
+            null,
+            h(
+              'tr',
+              null,
+              h('th', null, 'Skill'),
+              ...desktops.map((d) => h('th', { key: d.id }, d.label)),
+            ),
+          ),
+          h(
+            'tbody',
+            null,
+            ...filtered.map((r) =>
+              h(
+                'tr',
+                { key: r.name },
+                h('td', null, r.name),
+                ...desktops.map((d) => {
+                  const s = r.byDesktopStatus[d.id] || 'unknown';
+                  const scanFailed =
+                    d.skillRoots?.some((root) => root.error) ||
+                    d.diagnostics?.some((issue) => !issue.skill);
+                  const label =
+                    s !== 'unknown'
+                      ? status[s] || s
+                      : !d.skillRoots?.length
+                        ? '未覆盖 Skills'
+                        : scanFailed
+                          ? '扫描不完整'
+                          : r.byDesktop?.[d.id]?.length
+                            ? '包内容未完整核验'
+                            : '未能确认此 Skill';
+                  return h(
+                    'td',
+                    { key: d.id },
+                    h(Pill, {
+                      label,
+                      tone:
+                        s === 'same'
+                          ? 'good'
+                          : s === 'different' || s === 'conflict'
+                            ? 'warn'
+                            : 'muted',
+                    }),
+                  );
+                }),
+              ),
+            ),
+          ),
+        ),
+      );
     }
     function DiagnosticTable({ desktops, search }) {
-      const rows = desktops.flatMap(desktop => [
-        ...desktop.diagnostics.map(issue => [desktop.label, issue.skill ? 'Skills · ' + issue.skill : 'Skills 目录',
-          skillIssueLabels[issue.reason] || '读取失败（' + issue.reason + '）']),
-        ...desktop.skillRoots.filter(root => root.error).map(root => [desktop.label,
-          root.scope === 'shared' ? '共享 Skills 目录' : '用户 Skills 目录',
-          skillIssueLabels[root.error] || '读取失败（' + root.error + '）']),
-        ...(desktop.mcp?.status === 'unreadable' ? [[desktop.label, 'MCP', '无法读取或解析用户配置']] : []),
-        ...(desktop.plugins?.status === 'unreadable' ? [[desktop.label, '用户插件 / 扩展', '无法读取或识别登记格式']] : []),
+      const rows = desktops.flatMap((desktop) => [
+        ...desktop.diagnostics.map((issue) => [
+          desktop.label,
+          issue.skill ? 'Skills · ' + issue.skill : 'Skills 目录',
+          skillIssueLabels[issue.reason] || '读取失败（' + issue.reason + '）',
+        ]),
+        ...desktop.skillRoots
+          .filter((root) => root.error)
+          .map((root) => [
+            desktop.label,
+            root.scope === 'shared' ? '共享 Skills 目录' : '用户 Skills 目录',
+            skillIssueLabels[root.error] || '读取失败（' + root.error + '）',
+          ]),
+        ...(desktop.mcp?.status === 'unreadable'
+          ? [[desktop.label, 'MCP', '无法读取或解析用户配置']]
+          : []),
+        ...(desktop.plugins?.status === 'unreadable'
+          ? [[desktop.label, '用户插件 / 扩展', '无法读取或识别登记格式']]
+          : []),
       ]);
-      const filtered = rows.filter(row => row.some(value => value.toLowerCase().includes(search)));
+      const filtered = rows.filter((row) =>
+        row.some((value) => value.toLowerCase().includes(search)),
+      );
       const resourceStatus = (resource, entries) => {
         if (!resource) return '未覆盖';
         if (resource.status === 'unreadable') return '读取失败';
         if (resource.status === 'missing') return '未找到配置文件';
         return entries.length ? '已读取' : '无记录';
       };
-      const coverage = desktops.map(desktop => [
-        desktop.label,
-        !desktop.skillRoots.length ? '未覆盖' :
-          desktop.diagnostics.length || desktop.skillRoots.some(root => root.error) ? '扫描不完整' :
-          !desktop.skillRoots.some(root => root.exists) ? '未找到目录' : desktop.skills.length ? '已读取' : '无记录',
-        resourceStatus(desktop.mcp, desktop.mcp?.servers),
-        resourceStatus(desktop.plugins, desktop.plugins?.entries),
-      ]).filter(row => row.some(value => value.toLowerCase().includes(search)));
-      const table = (label, headings, data) => h('div', { className: 'sdc-scroll', role: 'region', tabIndex: 0, 'aria-label': label }, h('table', { className: 'sdc-table' },
-        h('thead', null, h('tr', null, ...headings.map(title => h('th', { key: title, scope: 'col' }, title)))),
-        h('tbody', null, ...data.map((row, index) => h('tr', { key: index },
-          ...row.map((value, column) => h('td', { key: column }, value)))))));
-      return h(React.Fragment, null,
-        filtered.length ? table('扫描问题', ['Desktop', '扫描项目', '原因'], filtered) :
-          h(Empty, { title: search ? '没有匹配的扫描诊断' : '没有需要处理的扫描诊断' }),
-        coverage.length ? h('details', { className: 'sdc-details' }, h('summary', null, '查看各应用的扫描范围'),
-          table('应用扫描范围', ['Desktop', 'Skills', 'MCP', '用户插件 / 扩展'], coverage)) : null);
+      const coverage = desktops
+        .map((desktop) => [
+          desktop.label,
+          !desktop.skillRoots.length
+            ? '未覆盖'
+            : desktop.diagnostics.length || desktop.skillRoots.some((root) => root.error)
+              ? '扫描不完整'
+              : !desktop.skillRoots.some((root) => root.exists)
+                ? '未找到目录'
+                : desktop.skills.length
+                  ? '已读取'
+                  : '无记录',
+          resourceStatus(desktop.mcp, desktop.mcp?.servers),
+          resourceStatus(desktop.plugins, desktop.plugins?.entries),
+        ])
+        .filter((row) => row.some((value) => value.toLowerCase().includes(search)));
+      const table = (label, headings, data) =>
+        h(
+          'div',
+          { className: 'sdc-scroll', role: 'region', tabIndex: 0, 'aria-label': label },
+          h(
+            'table',
+            { className: 'sdc-table' },
+            h(
+              'thead',
+              null,
+              h(
+                'tr',
+                null,
+                ...headings.map((title) => h('th', { key: title, scope: 'col' }, title)),
+              ),
+            ),
+            h(
+              'tbody',
+              null,
+              ...data.map((row, index) =>
+                h(
+                  'tr',
+                  { key: index },
+                  ...row.map((value, column) => h('td', { key: column }, value)),
+                ),
+              ),
+            ),
+          ),
+        );
+      return h(
+        React.Fragment,
+        null,
+        filtered.length
+          ? table('扫描问题', ['Desktop', '扫描项目', '原因'], filtered)
+          : h(Empty, { title: search ? '没有匹配的扫描诊断' : '没有需要处理的扫描诊断' }),
+        coverage.length
+          ? h(
+              'details',
+              { className: 'sdc-details' },
+              h('summary', null, '查看各应用的扫描范围'),
+              table('应用扫描范围', ['Desktop', 'Skills', 'MCP', '用户插件 / 扩展'], coverage),
+            )
+          : null,
+      );
     }
     function McpList({ desktop, reload, enabled, heading = 'MCP', search = '' }) {
       const { mcp } = desktop;
       const headingId = 'sdc-mcp-heading-' + desktop.id;
-      const matching = mcp?.servers.filter(server => server.name.toLowerCase().includes(search)) ?? [];
+      const matching =
+        mcp?.servers.filter((server) => server.name.toLowerCase().includes(search)) ?? [];
       const messages = {
         missing: '未找到该应用的用户配置文件。',
         unreadable: '无法读取或解析该应用的用户配置。',
       };
-      return h('section', { className: 'sdc-skill-group', 'aria-labelledby': headingId },
-        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: headingId, tabIndex: -1 }, heading)),
-        enabled && managedSkillTargets.has(desktop.id) && typeof window.__DSH_DIRECTORY_PICKER__?.pick === 'function'
-          ? h(McpManagement, { desktops: [desktop], reload }) : null,
-        !mcp ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的 MCP 配置。') :
-        mcp.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[mcp.status]) :
-        mcp.servers.length === 0 ? h('p', { className: 'sdc-muted' }, '用户配置中没有 MCP 服务。') :
-        !matching.length ? h('p', { className: 'sdc-muted' }, '没有匹配的 MCP 服务。') :
-        h('ul', { className: 'sdc-skill-list' }, ...matching.map(server =>
-          h('li', { className: 'sdc-skill-item', key: server.name },
-            h('div', { className: 'sdc-skill-heading' }, h('h3', null, server.name),
-              h('span', { className: 'sdc-muted' }, server.enabled === false ? '配置中已停用' : '已配置'))))));
+      return h(
+        'section',
+        { className: 'sdc-skill-group', 'aria-labelledby': headingId },
+        h(
+          'div',
+          { className: 'sdc-skill-heading' },
+          h('h2', { id: headingId, tabIndex: -1 }, heading),
+        ),
+        enabled &&
+          managedSkillTargets.has(desktop.id) &&
+          typeof window.__DSH_DIRECTORY_PICKER__?.pick === 'function'
+          ? h(McpManagement, { desktops: [desktop], reload })
+          : null,
+        !mcp
+          ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的 MCP 配置。')
+          : mcp.status !== 'read'
+            ? h('p', { className: 'sdc-muted' }, messages[mcp.status])
+            : mcp.servers.length === 0
+              ? h('p', { className: 'sdc-muted' }, '用户配置中没有 MCP 服务。')
+              : !matching.length
+                ? h('p', { className: 'sdc-muted' }, '没有匹配的 MCP 服务。')
+                : h(
+                    'ul',
+                    { className: 'sdc-skill-list' },
+                    ...matching.map((server) =>
+                      h(
+                        'li',
+                        { className: 'sdc-skill-item', key: server.name },
+                        h(
+                          'div',
+                          { className: 'sdc-skill-heading' },
+                          h('h3', null, server.name),
+                          h(
+                            'span',
+                            { className: 'sdc-muted' },
+                            server.enabled === false ? '配置中已停用' : '已配置',
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+      );
     }
     const mcpManagementErrors = {
       CONFLICT: '服务同名，或配置刚被修改。请重新扫描，再核对目标。',
@@ -265,16 +529,23 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         if (pending && !busy) confirmation.current?.focus();
       }, [pending, busy]);
-      const hasServer = (desktop, serverName) => desktop.mcp?.servers.some(server => server.name === serverName);
-      const serverNames = [...new Set(desktops.flatMap(desktop => desktop.mcp?.servers.map(server => server.name) ?? []))].sort();
+      const hasServer = (desktop, serverName) =>
+        desktop.mcp?.servers.some((server) => server.name === serverName);
+      const serverNames = [
+        ...new Set(
+          desktops.flatMap((desktop) => desktop.mcp?.servers.map((server) => server.name) ?? []),
+        ),
+      ].sort();
 
-      const prepare = operation => {
-        const targets = desktops.filter(desktop => operation.action === 'add' || hasServer(desktop, operation.name));
+      const prepare = (operation) => {
+        const targets = desktops.filter(
+          (desktop) => operation.action === 'add' || hasServer(desktop, operation.name),
+        );
         setFeedback('');
         setResults([]);
         setPending({ operation, targets, selected: batch ? [] : targets });
       };
-      const reviewAdd = event => {
+      const reviewAdd = (event) => {
         event.preventDefault();
         try {
           const config = JSON.parse(configText);
@@ -287,14 +558,30 @@ window.__ModuleLoader__.load({
       const submit = async () => {
         setBusy(true);
         try {
-          const attempts = await Promise.all(pending.selected.map(target =>
-            submitManagementOperation(URL_MANAGE_MCP, mcpManagementErrors, pending.operation, target)));
-          setResults(previous => [
-            ...previous.filter(result => !attempts.some(next => next.target.id === result.target.id)),
+          const attempts = await Promise.all(
+            pending.selected.map((target) =>
+              submitManagementOperation(
+                URL_MANAGE_MCP,
+                mcpManagementErrors,
+                pending.operation,
+                target,
+              ),
+            ),
+          );
+          setResults((previous) => [
+            ...previous.filter(
+              (result) => !attempts.some((next) => next.target.id === result.target.id),
+            ),
             ...attempts,
           ]);
-          const retry = attempts.filter(result => result.error && !result.uncertain).map(result => result.target);
-          setPending(batch && retry.length ? { operation: pending.operation, targets: retry, selected: retry } : null);
+          const retry = attempts
+            .filter((result) => result.error && !result.uncertain)
+            .map((result) => result.target);
+          setPending(
+            batch && retry.length
+              ? { operation: pending.operation, targets: retry, selected: retry }
+              : null,
+          );
           if (!retry.length || batch) {
             setEditing(false);
             setName('');
@@ -306,79 +593,255 @@ window.__ModuleLoader__.load({
           setBusy(false);
         }
       };
-      const toggleTarget = (target, checked) => setPending(current => ({
-        ...current,
-        selected: checked ? [...current.selected, target] : current.selected.filter(item => item.id !== target.id),
-      }));
-      return h('div', { 'aria-label': batch ? '批量管理用户 MCP' : '管理用户 MCP' },
-        h('div', { className: 'sdc-actions' },
-          h('button', { type: 'button', className: 'sdc-btn', disabled: busy || Boolean(pending),
-            onClick: () => { setEditing(!editing); setConfigText(''); setFeedback(''); } }, editing ? '收起添加表单' : '添加 MCP 服务'),
-          h('select', { className: 'sdc-field', 'aria-label': '选择要移除的 MCP 服务',
-            value: removeName, disabled: busy || Boolean(pending) || !serverNames.length,
-            onChange: event => setRemoveName(event.target.value) },
+      const toggleTarget = (target, checked) =>
+        setPending((current) => ({
+          ...current,
+          selected: checked
+            ? [...current.selected, target]
+            : current.selected.filter((item) => item.id !== target.id),
+        }));
+      return h(
+        'div',
+        { 'aria-label': batch ? '批量管理用户 MCP' : '管理用户 MCP' },
+        h(
+          'div',
+          { className: 'sdc-actions' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'sdc-btn',
+              disabled: busy || Boolean(pending),
+              onClick: () => {
+                setEditing(!editing);
+                setConfigText('');
+                setFeedback('');
+              },
+            },
+            editing ? '收起添加表单' : '添加 MCP 服务',
+          ),
+          h(
+            'select',
+            {
+              className: 'sdc-field',
+              'aria-label': '选择要移除的 MCP 服务',
+              value: removeName,
+              disabled: busy || Boolean(pending) || !serverNames.length,
+              onChange: (event) => setRemoveName(event.target.value),
+            },
             h('option', { value: '' }, '选择要移除的服务'),
-            ...serverNames.map(server => h('option', { value: server, key: server }, server))),
-          h('button', { type: 'button', className: 'sdc-btn', disabled: busy || Boolean(pending) || !serverNames.includes(removeName),
-            onClick: () => prepare({ action: 'remove', name: removeName }) }, '移除 MCP 服务')),
-        editing && !pending ? h('form', { className: 'sdc-mcp-form', onSubmit: reviewAdd },
-          h('label', null, '服务名称', h('input', { className: 'sdc-field', required: true, maxLength: 128,
-            value: name, onChange: event => setName(event.target.value) })),
-          h('label', null, '单个服务的 JSON 配置', h('textarea', { className: 'sdc-field', required: true, rows: 4,
-            maxLength: 32768, value: configText, onChange: event => setConfigText(event.target.value),
-            placeholder: '{"type":"streamable-http","url":"https://example.com/mcp"}' })),
-          h('button', { type: 'submit', className: 'sdc-btn', disabled: !name.trim() || busy }, '核对添加')) : null,
-        pending ? h('div', { className: 'sdc-alert' },
-          h('p', { className: 'sdc-path' }, (pending.operation.action === 'add' ? '添加 ' : '移除 ') + pending.operation.name),
-          batch ? h('fieldset', { disabled: busy },
-            h('legend', null, '目标应用'),
-            ...pending.targets.map(target => h('label', { key: target.id, className: 'sdc-batch-target' },
-              h('input', { type: 'checkbox', checked: pending.selected.some(item => item.id === target.id),
-                onChange: event => toggleTarget(target, event.target.checked) }), target.label))) :
-            h('p', null, pending.targets[0].label),
-          h('button', { type: 'button', className: 'sdc-btn', ref: confirmation, disabled: busy || !pending.selected.length,
-            onClick: () => void submit() }, busy ? '处理中…' : results.length ? '重试失败目标' : '确认 MCP 操作'),
-          h('button', { type: 'button', className: 'sdc-btn', disabled: busy, onClick: () => setPending(null) }, '取消')) : null,
+            ...serverNames.map((server) => h('option', { value: server, key: server }, server)),
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'sdc-btn',
+              disabled: busy || Boolean(pending) || !serverNames.includes(removeName),
+              onClick: () => prepare({ action: 'remove', name: removeName }),
+            },
+            '移除 MCP 服务',
+          ),
+        ),
+        editing && !pending
+          ? h(
+              'form',
+              { className: 'sdc-mcp-form', onSubmit: reviewAdd },
+              h(
+                'label',
+                null,
+                '服务名称',
+                h('input', {
+                  className: 'sdc-field',
+                  required: true,
+                  maxLength: 128,
+                  value: name,
+                  onChange: (event) => setName(event.target.value),
+                }),
+              ),
+              h(
+                'label',
+                null,
+                '单个服务的 JSON 配置',
+                h('textarea', {
+                  className: 'sdc-field',
+                  required: true,
+                  rows: 4,
+                  maxLength: 32768,
+                  value: configText,
+                  onChange: (event) => setConfigText(event.target.value),
+                  placeholder: '{"type":"streamable-http","url":"https://example.com/mcp"}',
+                }),
+              ),
+              h(
+                'button',
+                { type: 'submit', className: 'sdc-btn', disabled: !name.trim() || busy },
+                '核对添加',
+              ),
+            )
+          : null,
+        pending
+          ? h(
+              'div',
+              { className: 'sdc-alert' },
+              h(
+                'p',
+                { className: 'sdc-path' },
+                (pending.operation.action === 'add' ? '添加 ' : '移除 ') + pending.operation.name,
+              ),
+              batch
+                ? h(
+                    'fieldset',
+                    { disabled: busy },
+                    h('legend', null, '目标应用'),
+                    ...pending.targets.map((target) =>
+                      h(
+                        'label',
+                        { key: target.id, className: 'sdc-batch-target' },
+                        h('input', {
+                          type: 'checkbox',
+                          checked: pending.selected.some((item) => item.id === target.id),
+                          onChange: (event) => toggleTarget(target, event.target.checked),
+                        }),
+                        target.label,
+                      ),
+                    ),
+                  )
+                : h('p', null, pending.targets[0].label),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'sdc-btn',
+                  ref: confirmation,
+                  disabled: busy || !pending.selected.length,
+                  onClick: () => void submit(),
+                },
+                busy ? '处理中…' : results.length ? '重试失败目标' : '确认 MCP 操作',
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'sdc-btn',
+                  disabled: busy,
+                  onClick: () => setPending(null),
+                },
+                '取消',
+              ),
+            )
+          : null,
         feedback ? h('p', { role: 'alert' }, feedback) : null,
-        results.length ? h('ul', { className: 'sdc-skill-list', role: 'status' }, ...results.map(result =>
-          h('li', { key: result.target.id, className: 'sdc-path' },
-            result.target.label + ' · ' + (result.error || '用户配置已更新。请在 Qoder 的连接器页面刷新。')))) : null);
+        results.length
+          ? h(
+              'ul',
+              { className: 'sdc-skill-list', role: 'status' },
+              ...results.map((result) =>
+                h(
+                  'li',
+                  { key: result.target.id, className: 'sdc-path' },
+                  result.target.label +
+                    ' · ' +
+                    (result.error || '用户配置已更新。请在 Qoder 的连接器页面刷新。'),
+                ),
+              ),
+            )
+          : null,
+      );
     }
 
     function McpOverview({ desktops, search, reload, enabled }) {
-      const targets = desktops.filter(desktop => managedSkillTargets.has(desktop.id));
-      const canManage = enabled && typeof window.__DSH_DIRECTORY_PICKER__?.pick === 'function' && targets.length > 0;
-      const items = desktops.filter(desktop =>
-        desktop.label.toLowerCase().includes(search) ||
-        desktop.mcp?.servers.some(server => server.name.toLowerCase().includes(search)));
-      return h(React.Fragment, null,
-        canManage ? h('section', { className: 'sdc-skill-group', 'aria-label': '批量管理 MCP' },
-          h('h3', null, '批量管理 MCP'), h(McpManagement, { desktops: targets, reload, batch: true })) : null,
-        items.length ? items.map(desktop => {
-          const matchesDesktop = desktop.label.toLowerCase().includes(search);
-          return h(McpList, {
-            key: desktop.id, desktop, heading: desktop.label,
-            search: matchesDesktop ? '' : search,
-          });
-        }) : h(Empty, { title: '没有匹配的 MCP 服务', subtitle: '试试服务名称或桌面应用名称。' }));
+      const targets = desktops.filter((desktop) => managedSkillTargets.has(desktop.id));
+      const canManage =
+        enabled &&
+        typeof window.__DSH_DIRECTORY_PICKER__?.pick === 'function' &&
+        targets.length > 0;
+      const items = desktops.filter(
+        (desktop) =>
+          desktop.label.toLowerCase().includes(search) ||
+          desktop.mcp?.servers.some((server) => server.name.toLowerCase().includes(search)),
+      );
+      return h(
+        React.Fragment,
+        null,
+        canManage
+          ? h(
+              'section',
+              { className: 'sdc-skill-group', 'aria-label': '批量管理 MCP' },
+              h('h3', null, '批量管理 MCP'),
+              h(McpManagement, { desktops: targets, reload, batch: true }),
+            )
+          : null,
+        items.length
+          ? items.map((desktop) => {
+              const matchesDesktop = desktop.label.toLowerCase().includes(search);
+              return h(McpList, {
+                key: desktop.id,
+                desktop,
+                heading: desktop.label,
+                search: matchesDesktop ? '' : search,
+              });
+            })
+          : h(Empty, { title: '没有匹配的 MCP 服务', subtitle: '试试服务名称或桌面应用名称。' }),
+      );
     }
     function PluginList({ plugins, configured, extensions, search }) {
-      const matching = plugins?.entries.filter(entry => entry.name.toLowerCase().includes(search)) ?? [];
+      const matching =
+        plugins?.entries.filter((entry) => entry.name.toLowerCase().includes(search)) ?? [];
       const messages = {
         missing: '未找到此应用的用户插件登记文件。',
         unreadable: '无法读取或识别此应用的插件登记格式。',
       };
-      return h('section', { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-plugin-heading' },
-        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading', tabIndex: -1 }, configured ? '用户插件配置' : extensions ? '用户扩展' : '用户插件')),
-        !plugins ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的插件清单。') :
-        plugins.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[plugins.status]) :
-        !plugins.entries.length ? h('p', { className: 'sdc-muted' }, configured ? '没有用户插件配置记录。' : '没有用户插件安装记录。') :
-        !matching.length ? h('p', { className: 'sdc-muted' }, '没有匹配的插件或扩展。') :
-        h('ul', { className: 'sdc-skill-list' }, ...matching.map((entry, index) =>
-          h('li', { className: 'sdc-skill-item', key: index },
-            h('div', { className: 'sdc-skill-heading' }, h('h3', null, entry.name),
-              entry.version ? h('span', { className: 'sdc-muted' }, entry.version) : null,
-              typeof entry.enabled === 'boolean' ? h('span', { className: 'sdc-muted' }, entry.enabled ? '配置中已启用' : '配置中已停用') : null)))));
+      return h(
+        'section',
+        { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-plugin-heading' },
+        h(
+          'div',
+          { className: 'sdc-skill-heading' },
+          h(
+            'h2',
+            { id: 'sdc-plugin-heading', tabIndex: -1 },
+            configured ? '用户插件配置' : extensions ? '用户扩展' : '用户插件',
+          ),
+        ),
+        !plugins
+          ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的插件清单。')
+          : plugins.status !== 'read'
+            ? h('p', { className: 'sdc-muted' }, messages[plugins.status])
+            : !plugins.entries.length
+              ? h(
+                  'p',
+                  { className: 'sdc-muted' },
+                  configured ? '没有用户插件配置记录。' : '没有用户插件安装记录。',
+                )
+              : !matching.length
+                ? h('p', { className: 'sdc-muted' }, '没有匹配的插件或扩展。')
+                : h(
+                    'ul',
+                    { className: 'sdc-skill-list' },
+                    ...matching.map((entry, index) =>
+                      h(
+                        'li',
+                        { className: 'sdc-skill-item', key: index },
+                        h(
+                          'div',
+                          { className: 'sdc-skill-heading' },
+                          h('h3', null, entry.name),
+                          entry.version
+                            ? h('span', { className: 'sdc-muted' }, entry.version)
+                            : null,
+                          typeof entry.enabled === 'boolean'
+                            ? h(
+                                'span',
+                                { className: 'sdc-muted' },
+                                entry.enabled ? '配置中已启用' : '配置中已停用',
+                              )
+                            : null,
+                        ),
+                      ),
+                    ),
+                  ),
+      );
     }
     const skillManagementErrors = {
       CONFLICT: '目标目录存在同名 Skill，或该 Skill 正在处理。',
@@ -389,13 +852,14 @@ window.__ModuleLoader__.load({
     };
 
     const managedSkillTargets = new Set(['qoder-global', 'qoder-cn']);
-    const hasLocalSkill = (desktop, name) => desktop.skills.some(skill =>
-      skill.scope === 'user' && skill.directoryName === name);
+    const hasLocalSkill = (desktop, name) =>
+      desktop.skills.some((skill) => skill.scope === 'user' && skill.directoryName === name);
 
     async function submitManagementOperation(url, errors, operation, target) {
       try {
         const response = await fetch(url, {
-          method: 'POST', credentials: 'same-origin',
+          method: 'POST',
+          credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ ...operation, target: target.id }),
         });
@@ -420,15 +884,24 @@ window.__ModuleLoader__.load({
         if (pending) confirmButton.current?.focus();
       }, [pending]);
       const picker = window.__DSH_DIRECTORY_PICKER__;
-      const targets = desktops.filter(desktop => managedSkillTargets.has(desktop.id));
+      const targets = desktops.filter((desktop) => managedSkillTargets.has(desktop.id));
       const canManage = enabled && typeof picker?.pick === 'function' && targets.length > 0;
-      const localNames = [...new Set(targets.flatMap(target =>
-        target.skills.filter(skill => skill.scope === 'user').map(skill => skill.directoryName)))].sort();
+      const localNames = [
+        ...new Set(
+          targets.flatMap((target) =>
+            target.skills
+              .filter((skill) => skill.scope === 'user')
+              .map((skill) => skill.directoryName),
+          ),
+        ),
+      ].sort();
 
       const prepare = (operation) => {
         setFeedback(null);
         setResults([]);
-        const eligible = targets.filter(target => operation.action === 'install' || hasLocalSkill(target, operation.name));
+        const eligible = targets.filter(
+          (target) => operation.action === 'install' || hasLocalSkill(target, operation.name),
+        );
         if (eligible.length) setPending({ operation, targets: eligible, selected: eligible });
       };
       const requestInstall = async () => {
@@ -436,7 +909,12 @@ window.__ModuleLoader__.load({
         setFeedback(null);
         try {
           const source = await picker.pick();
-          if (source) prepare({ action: 'install', name: source.split('/').filter(Boolean).pop() || '', source });
+          if (source)
+            prepare({
+              action: 'install',
+              name: source.split('/').filter(Boolean).pop() || '',
+              source,
+            });
         } catch {
           setFeedback('无法打开本地目录选择器。');
         } finally {
@@ -446,60 +924,181 @@ window.__ModuleLoader__.load({
       const submit = async () => {
         setBusy(true);
         setFeedback(null);
-        const attempted = await Promise.all(pending.selected.map(target => submitManagementOperation(URL_MANAGE_SKILL, skillManagementErrors, pending.operation, target)));
-        setResults(previous => [
-          ...previous.filter(result => !attempted.some(next => next.target.id === result.target.id)),
+        const attempted = await Promise.all(
+          pending.selected.map((target) =>
+            submitManagementOperation(
+              URL_MANAGE_SKILL,
+              skillManagementErrors,
+              pending.operation,
+              target,
+            ),
+          ),
+        );
+        setResults((previous) => [
+          ...previous.filter(
+            (result) => !attempted.some((next) => next.target.id === result.target.id),
+          ),
           ...attempted,
         ]);
-        const retry = attempted.filter(result => result.error && !result.uncertain).map(result => result.target);
-        setPending(retry.length ? { operation: pending.operation, targets: retry, selected: retry } : null);
+        const retry = attempted
+          .filter((result) => result.error && !result.uncertain)
+          .map((result) => result.target);
+        setPending(
+          retry.length ? { operation: pending.operation, targets: retry, selected: retry } : null,
+        );
         try {
           await reload();
         } finally {
           setBusy(false);
         }
       };
-      const toggleTarget = (target, checked) => setPending(current => ({
-        ...current,
-        selected: checked ? [...current.selected, target] : current.selected.filter(item => item.id !== target.id),
-      }));
-      const busyOrPending = busy || Boolean(pending);
-      return h(React.Fragment, null,
-        canManage ? h('section', { className: 'sdc-skill-group', 'aria-label': batch ? '批量管理 Skills' : '管理 Skills' },
-          batch ? h('h3', null, '批量管理 Skills') : null,
-          h('div', { className: 'sdc-actions' },
-            h('button', { type: 'button', className: 'sdc-btn',
-              disabled: busyOrPending, onClick: () => void requestInstall() }, '从本地目录安装 Skill'),
-            batch ? h(React.Fragment, null,
-              h('select', { className: 'sdc-field', 'aria-label': '选择要卸载的 Skill', value: removeName,
-                disabled: busyOrPending || localNames.length === 0, onChange: event => setRemoveName(event.target.value) },
-                h('option', { value: '' }, '选择要卸载的 Skill'),
-                ...localNames.map(name => h('option', { key: name, value: name }, name))),
-              h('button', { type: 'button', className: 'sdc-btn', disabled: busyOrPending || !localNames.includes(removeName),
-                onClick: () => prepare({ action: 'uninstall', name: removeName }) }, '批量卸载')) : null),
-          pending ? h('div', { className: 'sdc-alert' },
-            h('p', { className: 'sdc-path' }, (pending.operation.action === 'install' ? '安装 ' : '卸载 ') + pending.operation.name),
-            pending.operation.source ? h('p', { className: 'sdc-path' }, '来源：' + pending.operation.source) :
-              h('p', null, '卸载后可从各应用的恢复目录取回文件。'),
-            batch ? h('fieldset', { disabled: busy },
-              h('legend', null, '目标应用'),
-              ...pending.targets.map(target => h('label', { key: target.id, className: 'sdc-batch-target' },
-                h('input', { type: 'checkbox', checked: pending.selected.some(item => item.id === target.id),
-                  onChange: event => toggleTarget(target, event.target.checked) }), target.label))) :
-              h('p', null, pending.targets[0].label),
-            h('button', { type: 'button', className: 'sdc-btn', disabled: busy || !pending.selected.length,
-              ref: confirmButton, onClick: () => void submit() }, busy ? '处理中…' : results.length ? '重试失败目标' : '确认操作'),
-            h('button', { type: 'button', className: 'sdc-btn', disabled: busy, onClick: () => setPending(null) }, '取消')) : null,
-          feedback ? h('p', { role: 'alert' }, feedback) : null,
-          results.length ? h('ul', { className: 'sdc-skill-list', role: 'status' }, ...results.map(result =>
-            h('li', { key: result.target.id, className: 'sdc-path' },
-              result.target.label + ' · ' + (result.error || (result.backup
-                ? '已卸载。恢复位置：' + result.backup
-                : '已安装。若 Qoder 中尚未显示，请刷新已安装列表。'))))) : null) : null,
-        h(SkillsList, {
-          desktops, search, showDesktop: batch,
-          onRemove: canManage && !busyOrPending && !batch ? name => prepare({ action: 'uninstall', name }) : undefined,
+      const toggleTarget = (target, checked) =>
+        setPending((current) => ({
+          ...current,
+          selected: checked
+            ? [...current.selected, target]
+            : current.selected.filter((item) => item.id !== target.id),
         }));
+      const busyOrPending = busy || Boolean(pending);
+      return h(
+        React.Fragment,
+        null,
+        canManage
+          ? h(
+              'section',
+              {
+                className: 'sdc-skill-group',
+                'aria-label': batch ? '批量管理 Skills' : '管理 Skills',
+              },
+              batch ? h('h3', null, '批量管理 Skills') : null,
+              h(
+                'div',
+                { className: 'sdc-actions' },
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'sdc-btn',
+                    disabled: busyOrPending,
+                    onClick: () => void requestInstall(),
+                  },
+                  '从本地目录安装 Skill',
+                ),
+                batch
+                  ? h(
+                      React.Fragment,
+                      null,
+                      h(
+                        'select',
+                        {
+                          className: 'sdc-field',
+                          'aria-label': '选择要卸载的 Skill',
+                          value: removeName,
+                          disabled: busyOrPending || localNames.length === 0,
+                          onChange: (event) => setRemoveName(event.target.value),
+                        },
+                        h('option', { value: '' }, '选择要卸载的 Skill'),
+                        ...localNames.map((name) => h('option', { key: name, value: name }, name)),
+                      ),
+                      h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'sdc-btn',
+                          disabled: busyOrPending || !localNames.includes(removeName),
+                          onClick: () => prepare({ action: 'uninstall', name: removeName }),
+                        },
+                        '批量卸载',
+                      ),
+                    )
+                  : null,
+              ),
+              pending
+                ? h(
+                    'div',
+                    { className: 'sdc-alert' },
+                    h(
+                      'p',
+                      { className: 'sdc-path' },
+                      (pending.operation.action === 'install' ? '安装 ' : '卸载 ') +
+                        pending.operation.name,
+                    ),
+                    pending.operation.source
+                      ? h('p', { className: 'sdc-path' }, '来源：' + pending.operation.source)
+                      : h('p', null, '卸载后可从各应用的恢复目录取回文件。'),
+                    batch
+                      ? h(
+                          'fieldset',
+                          { disabled: busy },
+                          h('legend', null, '目标应用'),
+                          ...pending.targets.map((target) =>
+                            h(
+                              'label',
+                              { key: target.id, className: 'sdc-batch-target' },
+                              h('input', {
+                                type: 'checkbox',
+                                checked: pending.selected.some((item) => item.id === target.id),
+                                onChange: (event) => toggleTarget(target, event.target.checked),
+                              }),
+                              target.label,
+                            ),
+                          ),
+                        )
+                      : h('p', null, pending.targets[0].label),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'sdc-btn',
+                        disabled: busy || !pending.selected.length,
+                        ref: confirmButton,
+                        onClick: () => void submit(),
+                      },
+                      busy ? '处理中…' : results.length ? '重试失败目标' : '确认操作',
+                    ),
+                    h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'sdc-btn',
+                        disabled: busy,
+                        onClick: () => setPending(null),
+                      },
+                      '取消',
+                    ),
+                  )
+                : null,
+              feedback ? h('p', { role: 'alert' }, feedback) : null,
+              results.length
+                ? h(
+                    'ul',
+                    { className: 'sdc-skill-list', role: 'status' },
+                    ...results.map((result) =>
+                      h(
+                        'li',
+                        { key: result.target.id, className: 'sdc-path' },
+                        result.target.label +
+                          ' · ' +
+                          (result.error ||
+                            (result.backup
+                              ? '已卸载。恢复位置：' + result.backup
+                              : '已安装。若 Qoder 中尚未显示，请刷新已安装列表。')),
+                      ),
+                    ),
+                  )
+                : null,
+            )
+          : null,
+        h(SkillsList, {
+          desktops,
+          search,
+          showDesktop: batch,
+          onRemove:
+            canManage && !busyOrPending && !batch
+              ? (name) => prepare({ action: 'uninstall', name })
+              : undefined,
+        }),
+      );
     }
     function Dashboard() {
       const [overview, setOverview] = React.useState(null);
@@ -512,7 +1111,7 @@ window.__ModuleLoader__.load({
       const viewport = React.useRef(null);
       const detailHeading = React.useRef(null);
       const restoreDesktop = React.useRef(null);
-      const desktop = overview?.desktops.find(item => item.id === desktopId);
+      const desktop = overview?.desktops.find((item) => item.id === desktopId);
       React.useEffect(() => {
         if (desktopId) {
           detailHeading.current?.focus();
@@ -526,100 +1125,324 @@ window.__ModuleLoader__.load({
       React.useEffect(attachStyle, []);
       const reload = React.useCallback(async () => {
         const id = ++refreshId.current;
-        setLoading(true); setError('');
+        setLoading(true);
+        setError('');
         try {
           const [overviewResponse, compareResponse] = await Promise.all([
             fetch(URL_OVERVIEW, { credentials: 'same-origin', cache: 'no-store' }),
             fetch(URL_COMPARE, { credentials: 'same-origin', cache: 'no-store' }),
           ]);
-          if (!overviewResponse.ok || !compareResponse.ok) throw new Error('DSH 读取失败：请检查插件和登录状态。');
+          if (!overviewResponse.ok || !compareResponse.ok)
+            throw new Error('DSH 读取失败：请检查插件和登录状态。');
           const [a, b] = await Promise.all([overviewResponse.json(), compareResponse.json()]);
           if (!a.ok || !b.ok) throw new Error('DSH 扫描未完成，请检查插件日志。');
-          if (id === refreshId.current) { setOverview(a.data); setComparison(b.data); }
-        } catch (e) { if (id === refreshId.current) setError(e.message || '无法读取数据'); }
-        finally { if (id === refreshId.current) setLoading(false); }
+          if (id === refreshId.current) {
+            setOverview(a.data);
+            setComparison(b.data);
+          }
+        } catch (e) {
+          if (id === refreshId.current) setError(e.message || '无法读取数据');
+        } finally {
+          if (id === refreshId.current) setLoading(false);
+        }
       }, []);
-      React.useEffect(() => { void reload(); return () => { refreshId.current++; }; }, [reload]);
+      React.useEffect(() => {
+        void reload();
+        return () => {
+          refreshId.current++;
+        };
+      }, [reload]);
       const desktops = overview?.desktops || [];
       const query = search.trim().toLowerCase();
-      const matching = desktops.filter(d => [d.label, d.id, d.status].join(' ').toLowerCase().includes(query));
-      const tabs = [['desktops','桌面应用'],['skills','Skills 清单'],['mcp','MCP 清单'],['diff','跨端差异'],['diagnostics','诊断']];
-      const detailSections = desktop ? [
-        ['sdc-detail-skills', 'Skills'],
-        ['sdc-mcp-heading-' + desktop.id, 'MCP'],
-        ['sdc-plugin-heading', '插件 / 扩展'],
-      ] : [];
-      return h('div', { className: 'sdc-panel' },
-        h('div', { className: 'sdc-viewport', ref: viewport, tabIndex: 0, role: 'region', 'aria-label': 'Desktop Center 滚动区域' },
-          h('main', { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
-            h('header', { className: 'sdc-hero' },
+      const matching = desktops.filter((d) =>
+        [d.label, d.id, d.status].join(' ').toLowerCase().includes(query),
+      );
+      const tabs = [
+        ['desktops', '桌面应用'],
+        ['skills', 'Skills 清单'],
+        ['mcp', 'MCP 清单'],
+        ['diff', '跨端差异'],
+        ['diagnostics', '诊断'],
+      ];
+      const detailSections = desktop
+        ? [
+            ['sdc-detail-skills', 'Skills'],
+            ['sdc-mcp-heading-' + desktop.id, 'MCP'],
+            ['sdc-plugin-heading', '插件 / 扩展'],
+          ]
+        : [];
+      return h(
+        'div',
+        { className: 'sdc-panel' },
+        h(
+          'div',
+          {
+            className: 'sdc-viewport',
+            ref: viewport,
+            tabIndex: 0,
+            role: 'region',
+            'aria-label': 'Desktop Center 滚动区域',
+          },
+          h(
+            'main',
+            { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
+            h(
+              'header',
+              { className: 'sdc-hero' },
               h('h1', null, 'Desktop Center'),
-              h(Pill, { label: 'v' + CLIENT_VERSION })),
-            h('div', { className: 'sdc-toolbar' },
-              h('nav', { className: 'sdc-tabs', 'aria-label': '管理视图' },
-                ...tabs.map(([key,label]) => h('button', { type: 'button', key, className: 'sdc-tab',
-                  'aria-current': tab === key ? 'page' : undefined, onClick: () => {
-                    setTab(key);
-                    setDesktopId(null);
-                    setSearch('');
-                    if (viewport.current) viewport.current.scrollTop = 0;
-                  } }, label))),
-              h('div', { className: 'sdc-actions' },
-                h('input', { className: 'sdc-field', type: 'search', value: search, onChange: e => setSearch(e.target.value),
-                  'aria-label': '搜索当前视图', placeholder: desktop ? '搜索此应用的资源' : tab === 'skills' ? '搜索名称、简介或 Desktop' : tab === 'mcp' ? '搜索服务或 Desktop' : '搜索...' }),
-                h('button', { type: 'button', className: 'sdc-btn', disabled: loading,
-                  onClick: () => { void reload(); } }, loading ? '扫描中…' : '重新扫描'))),
-            error ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error) : null,
-            overview && overview.platform !== 'darwin' ? h('div', { className: 'sdc-alert' }, '当前 Host 不是 macOS，只提供有限的兼容性信息。') : null,
-            loading && !overview ? h(Empty, { title: '正在扫描本地 Desktop', subtitle: '仅读取已知的应用与 Skills 路径，不会更改任何配置。' }) : null,
-            !overview ? null : desktop ?
-              h('section', { className: 'sdc-pane', 'aria-labelledby': 'sdc-detail-heading' },
-                h('div', { className: 'sdc-pane-title' },
-                  h('button', { type: 'button', className: 'sdc-btn', onClick: () => {
-                    restoreDesktop.current = desktop.id;
-                    setDesktopId(null);
-                    setSearch('');
-                  } }, '返回桌面应用'),
-                  h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label),
-                  h('nav', { className: 'sdc-detail-tools', 'aria-label': '应用资源' },
-                    ...detailSections.map(([id, label]) => h('button', { key: id, type: 'button',
-                      className: 'sdc-btn', onClick: () => {
-                        const section = document.getElementById(id);
-                        section?.focus({ preventScroll: true });
-                        section?.scrollIntoView({ block: 'start' });
-                      } }, label)))),
-                h('div', { id: 'sdc-detail-skills', tabIndex: -1, role: 'region', 'aria-label': 'Skills' },
-                  h(DesktopSkills, { key: desktop.id, desktops: [desktop], search: query, reload,
-                    enabled: overview.platform === 'darwin' })),
-                h(McpList, { key: `mcp:${desktop.id}`, desktop, reload, search: query, enabled: overview.platform === 'darwin' }),
-                h(PluginList, { plugins: desktop.plugins, search: query, configured: desktop.id === 'codex-desktop',
-                  extensions: desktop.id === 'trae' || desktop.id === 'trae-cn' }),
-                h(DesktopPaths, { desktop })) :
-            tab === 'desktops' ?
-              h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
-                ...matching.map(d => h(Card, { key: d.id, desktop: d, onOpen: () => { setDesktopId(d.id); setSearch(''); } })),
-                ...(matching.length ? [] : [h(Empty, { key: 'empty', title: '没有匹配的应用', subtitle: '尝试其他关键词。' })])) :
-              h('section', { className: 'sdc-pane' },
-                h('div', { className: 'sdc-pane-title' }, tab === 'skills' ? 'Skills 资源清单' : tab === 'mcp' ? 'MCP 清单' : tab === 'diff' ? '跨 Desktop Skill 包对比' : '扫描诊断'),
-                tab === 'skills' ? h(DesktopSkills, { desktops, search: query, reload, batch: true, enabled: overview.platform === 'darwin' }) :
-                tab === 'mcp' ? h(McpOverview, { desktops, search: query, reload, enabled: overview.platform === 'darwin' }) :
-                tab === 'diff' ? h(CompareTable, { rows: comparison?.matrix || [], desktops, search: query }) :
-                h(DiagnosticTable, { desktops, search: query })),
-            h('footer', { className: 'sdc-foot' },
+              h(Pill, { label: 'v' + CLIENT_VERSION }),
+            ),
+            h(
+              'div',
+              { className: 'sdc-toolbar' },
+              h(
+                'nav',
+                { className: 'sdc-tabs', 'aria-label': '管理视图' },
+                ...tabs.map(([key, label]) =>
+                  h(
+                    'button',
+                    {
+                      type: 'button',
+                      key,
+                      className: 'sdc-tab',
+                      'aria-current': tab === key ? 'page' : undefined,
+                      onClick: () => {
+                        setTab(key);
+                        setDesktopId(null);
+                        setSearch('');
+                        if (viewport.current) viewport.current.scrollTop = 0;
+                      },
+                    },
+                    label,
+                  ),
+                ),
+              ),
+              h(
+                'div',
+                { className: 'sdc-actions' },
+                h('input', {
+                  className: 'sdc-field',
+                  type: 'search',
+                  value: search,
+                  onChange: (e) => setSearch(e.target.value),
+                  'aria-label': '搜索当前视图',
+                  placeholder: desktop
+                    ? '搜索此应用的资源'
+                    : tab === 'skills'
+                      ? '搜索名称、简介或 Desktop'
+                      : tab === 'mcp'
+                        ? '搜索服务或 Desktop'
+                        : '搜索...',
+                }),
+                h(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'sdc-btn',
+                    disabled: loading,
+                    onClick: () => {
+                      void reload();
+                    },
+                  },
+                  loading ? '扫描中…' : '重新扫描',
+                ),
+              ),
+            ),
+            error
+              ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error)
+              : null,
+            overview && overview.platform !== 'darwin'
+              ? h(
+                  'div',
+                  { className: 'sdc-alert' },
+                  '当前 Host 不是 macOS，只提供有限的兼容性信息。',
+                )
+              : null,
+            loading && !overview
+              ? h(Empty, {
+                  title: '正在扫描本地 Desktop',
+                  subtitle: '仅读取已知的应用与 Skills 路径，不会更改任何配置。',
+                })
+              : null,
+            !overview
+              ? null
+              : desktop
+                ? h(
+                    'section',
+                    { className: 'sdc-pane', 'aria-labelledby': 'sdc-detail-heading' },
+                    h(
+                      'div',
+                      { className: 'sdc-pane-title' },
+                      h(
+                        'button',
+                        {
+                          type: 'button',
+                          className: 'sdc-btn',
+                          onClick: () => {
+                            restoreDesktop.current = desktop.id;
+                            setDesktopId(null);
+                            setSearch('');
+                          },
+                        },
+                        '返回桌面应用',
+                      ),
+                      h(
+                        'h2',
+                        { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading },
+                        desktop.label,
+                      ),
+                      h(
+                        'nav',
+                        { className: 'sdc-detail-tools', 'aria-label': '应用资源' },
+                        ...detailSections.map(([id, label]) =>
+                          h(
+                            'button',
+                            {
+                              key: id,
+                              type: 'button',
+                              className: 'sdc-btn',
+                              onClick: () => {
+                                const section = document.getElementById(id);
+                                section?.focus({ preventScroll: true });
+                                section?.scrollIntoView({ block: 'start' });
+                              },
+                            },
+                            label,
+                          ),
+                        ),
+                      ),
+                    ),
+                    h(
+                      'div',
+                      {
+                        id: 'sdc-detail-skills',
+                        tabIndex: -1,
+                        role: 'region',
+                        'aria-label': 'Skills',
+                      },
+                      h(DesktopSkills, {
+                        key: desktop.id,
+                        desktops: [desktop],
+                        search: query,
+                        reload,
+                        enabled: overview.platform === 'darwin',
+                      }),
+                    ),
+                    h(McpList, {
+                      key: `mcp:${desktop.id}`,
+                      desktop,
+                      reload,
+                      search: query,
+                      enabled: overview.platform === 'darwin',
+                    }),
+                    h(PluginList, {
+                      plugins: desktop.plugins,
+                      search: query,
+                      configured: desktop.id === 'codex-desktop',
+                      extensions: desktop.id === 'trae' || desktop.id === 'trae-cn',
+                    }),
+                    h(DesktopPaths, { desktop }),
+                  )
+                : tab === 'desktops'
+                  ? h(
+                      'section',
+                      { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
+                      ...matching.map((d) =>
+                        h(Card, {
+                          key: d.id,
+                          desktop: d,
+                          onOpen: () => {
+                            setDesktopId(d.id);
+                            setSearch('');
+                          },
+                        }),
+                      ),
+                      ...(matching.length
+                        ? []
+                        : [
+                            h(Empty, {
+                              key: 'empty',
+                              title: '没有匹配的应用',
+                              subtitle: '尝试其他关键词。',
+                            }),
+                          ]),
+                    )
+                  : h(
+                      'section',
+                      { className: 'sdc-pane' },
+                      h(
+                        'div',
+                        { className: 'sdc-pane-title' },
+                        tab === 'skills'
+                          ? 'Skills 资源清单'
+                          : tab === 'mcp'
+                            ? 'MCP 清单'
+                            : tab === 'diff'
+                              ? '跨 Desktop Skill 包对比'
+                              : '扫描诊断',
+                      ),
+                      tab === 'skills'
+                        ? h(DesktopSkills, {
+                            desktops,
+                            search: query,
+                            reload,
+                            batch: true,
+                            enabled: overview.platform === 'darwin',
+                          })
+                        : tab === 'mcp'
+                          ? h(McpOverview, {
+                              desktops,
+                              search: query,
+                              reload,
+                              enabled: overview.platform === 'darwin',
+                            })
+                          : tab === 'diff'
+                            ? h(CompareTable, {
+                                rows: comparison?.matrix || [],
+                                desktops,
+                                search: query,
+                              })
+                            : h(DiagnosticTable, { desktops, search: query }),
+                    ),
+            h(
+              'footer',
+              { className: 'sdc-foot' },
               '应用和 Skill 状态来自本机扫描。',
-              overview ? h('span', null, ' 最近扫描：' + new Date(overview.scannedAt).toLocaleString()) : null))));
+              overview
+                ? h('span', null, ' 最近扫描：' + new Date(overview.scannedAt).toLocaleString())
+                : null,
+            ),
+          ),
+        ),
+      );
     }
     function SidebarIcon({ size = 18 }) {
-      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
-        stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+      return h(
+        'svg',
+        {
+          width: size,
+          height: size,
+          viewBox: '0 0 24 24',
+          fill: 'none',
+          stroke: 'currentColor',
+          strokeWidth: 1.8,
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          'aria-hidden': true,
+        },
         h('rect', { x: 3, y: 4, width: 18, height: 13, rx: 2 }),
-        h('path', { d: 'M8 21h8M12 17v4M7 9h10M7 12h7' }));
+        h('path', { d: 'M8 21h8M12 17v4M7 9h10M7 12h7' }),
+      );
     }
     const inject = ['slots', 'layout'];
     function apply(ctx) {
       ctx.slots.inject('main', () => ctx.slots.register({ name: 'main', key: PAGE_ID }, Dashboard));
-      ctx.slots.inject('sidebar.panellist', () => ctx.slots.register({ name: 'sidebar.panellist',
-        id: PAGE_ID, order: 15, label: 'Desktop Center' }, SidebarIcon));
+      ctx.slots.inject('sidebar.panellist', () =>
+        ctx.slots.register(
+          { name: 'sidebar.panellist', id: PAGE_ID, order: 15, label: 'Desktop Center' },
+          SidebarIcon,
+        ),
+      );
     }
     module.exports.apply = apply;
     module.exports.inject = inject;

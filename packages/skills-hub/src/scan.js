@@ -181,7 +181,11 @@ export async function scanRoots(roots, { filesystem = fs, home = os.homedir() } 
         realManifest = await filesystem.realpath(candidate);
       } catch (error) {
         if (error?.code !== 'ENOENT' && error?.code !== 'ENOTDIR') {
-          diagnostics.push({ root: root.path, skill: child.name, reason: error?.code ?? 'RESOLVE_FAILED' });
+          diagnostics.push({
+            root: root.path,
+            skill: child.name,
+            reason: error?.code ?? 'RESOLVE_FAILED',
+          });
         }
         continue;
       }
@@ -197,7 +201,11 @@ export async function scanRoots(roots, { filesystem = fs, home = os.homedir() } 
       try {
         stat = await filesystem.stat(realManifest);
       } catch (error) {
-        diagnostics.push({ root: root.path, skill: child.name, reason: error?.code ?? 'STAT_FAILED' });
+        diagnostics.push({
+          root: root.path,
+          skill: child.name,
+          reason: error?.code ?? 'STAT_FAILED',
+        });
         continue;
       }
       if (!stat.isFile() || stat.size > MAX_MANIFEST_BYTES) {
@@ -234,7 +242,11 @@ export async function scanRoots(roots, { filesystem = fs, home = os.homedir() } 
           fileCount: fingerprint.fileCount,
         });
       } catch (error) {
-        diagnostics.push({ root: root.path, skill: child.name, reason: error?.code ?? 'READ_FAILED' });
+        diagnostics.push({
+          root: root.path,
+          skill: child.name,
+          reason: error?.code ?? 'READ_FAILED',
+        });
       }
     }
   }
@@ -244,12 +256,28 @@ export async function scanRoots(roots, { filesystem = fs, home = os.homedir() } 
 /** Compare entire Skill packages. Incomplete evidence is never reported as same. */
 export function buildSkillMatrix(inventory) {
   const targetIds = inventory.desktops.map((item) => item.id);
-  const uncoveredIds = new Set(inventory.desktops.filter(item => item.skillRoots?.length === 0).map(item => item.id));
-  const incompleteScanIds = new Set(inventory.desktops.filter(item =>
-    item.skillRoots?.some(root => root.error) || item.diagnostics?.some(issue => !issue.skill)).map(item => item.id));
-  const failedNames = new Map(inventory.desktops.map(item => [
-    item.id, new Set((item.diagnostics ?? []).filter(issue => issue.skill).map(issue => issue.skill.toLowerCase())),
-  ]));
+  const uncoveredIds = new Set(
+    inventory.desktops.filter((item) => item.skillRoots?.length === 0).map((item) => item.id),
+  );
+  const incompleteScanIds = new Set(
+    inventory.desktops
+      .filter(
+        (item) =>
+          item.skillRoots?.some((root) => root.error) ||
+          item.diagnostics?.some((issue) => !issue.skill),
+      )
+      .map((item) => item.id),
+  );
+  const failedNames = new Map(
+    inventory.desktops.map((item) => [
+      item.id,
+      new Set(
+        (item.diagnostics ?? [])
+          .filter((issue) => issue.skill)
+          .map((issue) => issue.skill.toLowerCase()),
+      ),
+    ]),
+  );
   const rows = new Map();
   for (const desktop of inventory.desktops) {
     for (const skill of desktop.skills) {
@@ -276,10 +304,20 @@ export function buildSkillMatrix(inventory) {
       const byDesktopStatus = {};
       for (const id of targetIds) {
         const items = row.byDesktop[id];
-        byDesktopStatus[id] = items.length === 0 ? (uncoveredIds.has(id) || incompleteScanIds.has(id) || failedNames.get(id).has(row.name.toLowerCase()) ? 'unknown' : 'missing') :
-          items.some((item) => !item.packageSha256) ? 'unknown' :
-          new Set(items.map((item) => item.packageSha256)).size > 1 ? 'conflict' :
-          fingerprints.size > 1 ? 'different' : 'same';
+        byDesktopStatus[id] =
+          items.length === 0
+            ? uncoveredIds.has(id) ||
+              incompleteScanIds.has(id) ||
+              failedNames.get(id).has(row.name.toLowerCase())
+              ? 'unknown'
+              : 'missing'
+            : items.some((item) => !item.packageSha256)
+              ? 'unknown'
+              : new Set(items.map((item) => item.packageSha256)).size > 1
+                ? 'conflict'
+                : fingerprints.size > 1
+                  ? 'different'
+                  : 'same';
       }
       return {
         ...row,

@@ -7,7 +7,15 @@
 import { createDesktopRegistry } from './registry/service.js';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readZCodePlugins, readCodexPlugins, readTraeExtensions } from './codex-mcp.js';
+import {
+  readCodexMcp,
+  readQoderMcp,
+  readQoderPlugins,
+  readZCodeMcp,
+  readZCodePlugins,
+  readCodexPlugins,
+  readTraeExtensions,
+} from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
 import { isMcpManagementRequest, manageQoderMcp, qoderProfiles } from './mcp-management.js';
@@ -15,7 +23,7 @@ import { isSkillManagementRequest, manageSkill } from './skill-management.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.19';
+export const VERSION = '0.3.0-rc.20';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
@@ -28,7 +36,13 @@ const noCache = { 'cache-control': 'no-store', 'x-content-type-options': 'nosnif
 const json = (payload, status = 200) => Response.json(payload, { status, headers: noCache });
 
 /** Inject dependencies for deterministic tests; no external process launched. */
-export function createDesktopCenter({ registry = createDesktopRegistry(), hub, platform = process.platform, readMcp = readCodexMcp, home = homedir() } = {}) {
+export function createDesktopCenter({
+  registry = createDesktopRegistry(),
+  hub,
+  platform = process.platform,
+  readMcp = readCodexMcp,
+  home = homedir(),
+} = {}) {
   const skillsHub = hub ?? createSkillsHub({ registry });
   return Object.freeze({
     version: 1,
@@ -36,43 +50,48 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
     skillsHub,
     async overview() {
       const inventory = await skillsHub.inventory();
-      const desktops = await Promise.all(inventory.desktops.map(async desktop => {
-        if (platform !== 'darwin') return desktop;
-        if (desktop.id === 'codex-desktop') {
+      const desktops = await Promise.all(
+        inventory.desktops.map(async (desktop) => {
+          if (platform !== 'darwin') return desktop;
+          if (desktop.id === 'codex-desktop') {
+            const [mcp, plugins] = await Promise.all([
+              readMcp(),
+              readCodexPlugins(join(home, '.codex', 'config.toml')),
+            ]);
+            return { ...desktop, mcp, plugins };
+          }
+          if (desktop.id === 'workbuddy') {
+            const [mcp, plugins] = await Promise.all([
+              readQoderMcp(join(home, '.workbuddy', 'mcp.json')),
+              readQoderPlugins(join(home, '.workbuddy', 'plugins', 'installed_plugins.json')),
+            ]);
+            return { ...desktop, mcp, plugins };
+          }
+          if (desktop.id === 'trae' || desktop.id === 'trae-cn') {
+            const isCn = desktop.id === 'trae-cn';
+            const userData = isCn ? 'Trae CN' : 'Trae';
+            const extensionHome = isCn ? '.trae-cn' : '.trae';
+            const [mcp, plugins] = await Promise.all([
+              readQoderMcp(
+                join(home, 'Library', 'Application Support', userData, 'User', 'mcp.json'),
+              ),
+              readTraeExtensions(join(home, extensionHome, 'extensions', 'extensions.json')),
+            ]);
+            return { ...desktop, mcp, plugins };
+          }
+          if (desktop.id === 'zcode') {
+            const [mcp, plugins] = await Promise.all([readZCodeMcp(home), readZCodePlugins(home)]);
+            return { ...desktop, mcp, plugins };
+          }
+          const directory = qoderProfiles.get(desktop.id);
+          if (!directory) return desktop;
           const [mcp, plugins] = await Promise.all([
-            readMcp(), readCodexPlugins(join(home, '.codex', 'config.toml')),
+            readQoderMcp(join(home, directory, 'settings.json')),
+            readQoderPlugins(join(home, directory, 'plugins', 'installed_plugins_v2.json')),
           ]);
           return { ...desktop, mcp, plugins };
-        }
-        if (desktop.id === 'workbuddy') {
-          const [mcp, plugins] = await Promise.all([
-            readQoderMcp(join(home, '.workbuddy', 'mcp.json')),
-            readQoderPlugins(join(home, '.workbuddy', 'plugins', 'installed_plugins.json')),
-          ]);
-          return { ...desktop, mcp, plugins };
-        }
-        if (desktop.id === 'trae' || desktop.id === 'trae-cn') {
-          const isCn = desktop.id === 'trae-cn';
-          const userData = isCn ? 'Trae CN' : 'Trae';
-          const extensionHome = isCn ? '.trae-cn' : '.trae';
-          const [mcp, plugins] = await Promise.all([
-            readQoderMcp(join(home, 'Library', 'Application Support', userData, 'User', 'mcp.json')),
-            readTraeExtensions(join(home, extensionHome, 'extensions', 'extensions.json')),
-          ]);
-          return { ...desktop, mcp, plugins };
-        }
-        if (desktop.id === 'zcode') {
-          const [mcp, plugins] = await Promise.all([readZCodeMcp(home), readZCodePlugins(home)]);
-          return { ...desktop, mcp, plugins };
-        }
-        const directory = qoderProfiles.get(desktop.id);
-        if (!directory) return desktop;
-        const [mcp, plugins] = await Promise.all([
-          readQoderMcp(join(home, directory, 'settings.json')),
-          readQoderPlugins(join(home, directory, 'plugins', 'installed_plugins_v2.json')),
-        ]);
-        return { ...desktop, mcp, plugins };
-      }));
+        }),
+      );
       return {
         version: VERSION,
         scannedAt: inventory.scannedAt,
@@ -81,21 +100,29 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
         desktops,
         summary: {
           desktopCount: inventory.desktops.length,
-          installedAppCount: inventory.desktops.filter(item => item.appPaths.length > 0).length,
+          installedAppCount: inventory.desktops.filter((item) => item.appPaths.length > 0).length,
           skillOccurrences: inventory.desktops.reduce((sum, item) => sum + item.skills.length, 0),
-          diagnosticCount: desktops.reduce((sum, item) => sum + item.diagnostics.length +
-            (item.skillRoots?.filter(root => root.error).length ?? 0) +
-            [item.mcp, item.plugins].filter(resource => resource?.status === 'unreadable').length, 0),
+          diagnosticCount: desktops.reduce(
+            (sum, item) =>
+              sum +
+              item.diagnostics.length +
+              (item.skillRoots?.filter((root) => root.error).length ?? 0) +
+              [item.mcp, item.plugins].filter((resource) => resource?.status === 'unreadable')
+                .length,
+            0,
+          ),
         },
       };
     },
     comparison: () => skillsHub.compare(),
     manageMcp(input) {
-      if (platform !== 'darwin') throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
+      if (platform !== 'darwin')
+        throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
       return manageQoderMcp({ ...input, home });
     },
     manageSkill(input) {
-      if (platform !== 'darwin') throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
+      if (platform !== 'darwin')
+        throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
       return manageSkill({ ...input, home });
     },
   });
@@ -119,22 +146,38 @@ export function makeRoutes(center) {
         return json({ ok: true, data: await get() });
       } catch {
         // Never echo raw filesystem paths, exception stacks or sensitive data.
-        return json({ ok: false, error: 'SCAN_FAILED', message: 'Read-only scan failed. Check DSH plugin logs.' }, 500);
+        return json(
+          {
+            ok: false,
+            error: 'SCAN_FAILED',
+            message: 'Read-only scan failed. Check DSH plugin logs.',
+          },
+          500,
+        );
       }
     },
   }));
   const management = [
-    { path: ROUTES.skills, validate: isSkillManagementRequest,
-      apply: ({ action, target, name, source }) => center.manageSkill({ action, target, name, source }) },
-    { path: ROUTES.mcp, validate: isMcpManagementRequest,
-      apply: ({ action, target, name, config }) => center.manageMcp({ action, target, name, config }) },
+    {
+      path: ROUTES.skills,
+      validate: isSkillManagementRequest,
+      apply: ({ action, target, name, source }) =>
+        center.manageSkill({ action, target, name, source }),
+    },
+    {
+      path: ROUTES.mcp,
+      validate: isMcpManagementRequest,
+      apply: ({ action, target, name, config }) =>
+        center.manageMcp({ action, target, name, config }),
+    },
   ].map(({ path, validate, apply }) => ({
     path,
     methods: ['POST'],
     requestBody: 'buffered',
     async fetch(request) {
       if (request.method !== 'POST') return json({ ok: false, error: 'METHOD_NOT_ALLOWED' }, 405);
-      if (request.headers.get('sec-fetch-site') === 'cross-site') return json({ ok: false, error: 'FORBIDDEN' }, 403);
+      if (request.headers.get('sec-fetch-site') === 'cross-site')
+        return json({ ok: false, error: 'FORBIDDEN' }, 403);
       if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json') {
         return json({ ok: false, error: 'INVALID_REQUEST' }, 415);
       }
@@ -143,11 +186,15 @@ export function makeRoutes(center) {
       try {
         return json({ ok: true, data: await apply(body) });
       } catch (error) {
-        if (['SKILL_EXISTS', 'MCP_EXISTS', 'EEXIST', 'SETTINGS_CHANGED'].includes(error.code)) return json({ ok: false, error: 'CONFLICT' }, 409);
-        if (error.code === 'INVALID_SETTINGS' || error.code === 'ELOOP') return json({ ok: false, error: 'INVALID_SETTINGS' }, 422);
+        if (['SKILL_EXISTS', 'MCP_EXISTS', 'EEXIST', 'SETTINGS_CHANGED'].includes(error.code))
+          return json({ ok: false, error: 'CONFLICT' }, 409);
+        if (error.code === 'INVALID_SETTINGS' || error.code === 'ELOOP')
+          return json({ ok: false, error: 'INVALID_SETTINGS' }, 422);
         if (error.code === 'ENOENT') return json({ ok: false, error: 'NOT_FOUND' }, 404);
-        if (error.code === 'EPERM' || error.code === 'EACCES') return json({ ok: false, error: 'FORBIDDEN' }, 403);
-        if (error.code === 'UNSUPPORTED_PLATFORM') return json({ ok: false, error: 'UNSUPPORTED_PLATFORM' }, 400);
+        if (error.code === 'EPERM' || error.code === 'EACCES')
+          return json({ ok: false, error: 'FORBIDDEN' }, 403);
+        if (error.code === 'UNSUPPORTED_PLATFORM')
+          return json({ ok: false, error: 'UNSUPPORTED_PLATFORM' }, 400);
         return json({ ok: false, error: 'MANAGEMENT_FAILED' }, 422);
       }
     },

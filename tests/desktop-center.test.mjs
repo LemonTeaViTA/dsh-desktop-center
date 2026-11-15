@@ -6,7 +6,14 @@ import path from 'node:path';
 import vm from 'node:vm';
 import { createDesktopRegistry } from '../packages/desktop-center/lib/registry/service.js';
 import { createSkillsHub } from '../packages/desktop-center/lib/skills/service.js';
-import { createDesktopCenter, makeRoutes, ROUTES, VERSION, apply, inject } from '../packages/desktop-center/lib/index.js';
+import {
+  createDesktopCenter,
+  makeRoutes,
+  ROUTES,
+  VERSION,
+  apply,
+  inject,
+} from '../packages/desktop-center/lib/index.js';
 
 const moduleRoot = new URL('../packages/desktop-center/', import.meta.url);
 
@@ -27,9 +34,20 @@ test('host exposes independent services and the expected authenticated query and
   const routes = new Map();
   const teardown = [];
   const ctx = {
-    provide(name, service) { services.set(name, service); },
-    connection: { fetch: { register(route) { routes.set(route.path, route); return () => routes.delete(route.path); } } },
-    effect(action) { teardown.push(action()); },
+    provide(name, service) {
+      services.set(name, service);
+    },
+    connection: {
+      fetch: {
+        register(route) {
+          routes.set(route.path, route);
+          return () => routes.delete(route.path);
+        },
+      },
+    },
+    effect(action) {
+      teardown.push(action());
+    },
   };
   assert.deepEqual(inject, ['connection']);
   apply(ctx);
@@ -37,12 +55,22 @@ test('host exposes independent services and the expected authenticated query and
   assert.equal(services.get('skillsHub').version, 2);
   assert.equal(services.get('desktopCenter').version, 1);
   assert.deepEqual([...routes.keys()].sort(), Object.values(ROUTES).sort());
-  assert.ok([...routes.values()].every(r => r.methods.join() === ([ROUTES.skills, ROUTES.mcp].includes(r.path) ? 'POST' : 'GET') && r.requestBody === 'buffered'));
-  const health = await routes.get(ROUTES.health).fetch(new Request('https://example.com' + ROUTES.health));
+  assert.ok(
+    [...routes.values()].every(
+      (r) =>
+        r.methods.join() === ([ROUTES.skills, ROUTES.mcp].includes(r.path) ? 'POST' : 'GET') &&
+        r.requestBody === 'buffered',
+    ),
+  );
+  const health = await routes
+    .get(ROUTES.health)
+    .fetch(new Request('https://example.com' + ROUTES.health));
   assert.equal(health.status, 200);
   assert.equal((await health.json()).data.version, VERSION);
   assert.equal(health.headers.get('cache-control'), 'no-store');
-  const unsupported = await routes.get(ROUTES.overview).fetch(new Request('https://example.com' + ROUTES.overview, { method: 'POST' }));
+  const unsupported = await routes
+    .get(ROUTES.overview)
+    .fetch(new Request('https://example.com' + ROUTES.overview, { method: 'POST' }));
   assert.equal(unsupported.status, 405);
   for (const dispose of teardown) await dispose();
   assert.equal(routes.size, 0);
@@ -55,34 +83,53 @@ test('overview reports real scan statistics but does not treat config dirs as ru
     await fs.mkdir(skill, { recursive: true });
     await fs.writeFile(path.join(skill, 'SKILL.md'), '---\nname: audit\n---\nRead only.\n');
     const registry = createDesktopRegistry({
-      home, platform: 'darwin',
-      filesystem: { stat(file) {
-        if (file.startsWith('/Applications/')) {
-          throw Object.assign(new Error('System applications are outside the test fixture'), { code: 'ENOENT' });
-        }
-        return fs.stat(file);
-      } },
+      home,
+      platform: 'darwin',
+      filesystem: {
+        stat(file) {
+          if (file.startsWith('/Applications/')) {
+            throw Object.assign(new Error('System applications are outside the test fixture'), {
+              code: 'ENOENT',
+            });
+          }
+          return fs.stat(file);
+        },
+      },
     });
-    const center = createDesktopCenter({ registry, hub: createSkillsHub({ registry, scanOptions: { home } }),
-      platform: 'darwin', readMcp: async () => ({ status: 'missing', servers: [] }),
+    const center = createDesktopCenter({
+      registry,
+      hub: createSkillsHub({ registry, scanOptions: { home } }),
+      platform: 'darwin',
+      readMcp: async () => ({ status: 'missing', servers: [] }),
     });
     const overview = await center.overview();
     assert.equal(overview.summary.desktopCount, 8);
     assert.equal(overview.summary.installedAppCount, 0);
     assert.ok(overview.summary.skillOccurrences >= 1);
-    assert.equal(overview.desktops.find(d => d.id === 'qoder-global').status, 'configuration-found');
+    assert.equal(
+      overview.desktops.find((d) => d.id === 'qoder-global').status,
+      'configuration-found',
+    );
     assert.equal(overview.readOnly, true);
     const diff = await center.comparison();
-    assert.ok(diff.matrix.some(x => x.name === 'audit'));
+    assert.ok(diff.matrix.some((x) => x.name === 'audit'));
   } finally {
     await fs.rm(home, { recursive: true, force: true });
   }
 });
 
 test('route errors have no raw exception details or sensitive filesystem paths', async () => {
-  const [route] = makeRoutes({ overview: async () => { throw new Error('secret=/Users/test/.ssh/private-key'); } });
+  const [route] = makeRoutes({
+    overview: async () => {
+      throw new Error('secret=/Users/test/.ssh/private-key');
+    },
+  });
   assert.equal(route.path, ROUTES.health); // health is first
-  const overview = makeRoutes({ overview: async () => { throw new Error('secret=/Users/test/.ssh/private-key'); } })[1];
+  const overview = makeRoutes({
+    overview: async () => {
+      throw new Error('secret=/Users/test/.ssh/private-key');
+    },
+  })[1];
   const result = await overview.fetch(new Request('https://test.local' + ROUTES.overview));
   const body = JSON.stringify(await result.json());
   assert.equal(result.status, 500);
@@ -93,38 +140,67 @@ test('client factory registers actual DSH main and sidebar panel using public sl
   const clientSource = await fs.readFile(new URL('./lib/client.js', moduleRoot), 'utf8');
   let factory;
   vm.runInNewContext(clientSource, {
-    window: { __ModuleLoader__: { load(value) { assert.equal(value.id, 'dsh-desktop-center'); factory = value.factory; } } },
+    window: {
+      __ModuleLoader__: {
+        load(value) {
+          assert.equal(value.id, 'dsh-desktop-center');
+          factory = value.factory;
+        },
+      },
+    },
   });
   assert.equal(typeof factory, 'function');
   const fakeReact = {
     createElement: (type, props, ...children) => ({ type, props, children }),
   };
-  const plugin = factory(key => {
+  const plugin = factory((key) => {
     if (key === 'react') return fakeReact;
     throw new Error('Unexpected module: ' + key);
   });
   assert.equal(typeof plugin.apply, 'function');
   assert.deepEqual(Array.from(plugin.inject), ['slots', 'layout']);
   const registrations = [];
-  plugin.apply({ slots: {
-    inject(name, callback) { callback(); },
-    register(options, view) { registrations.push({ options, view }); return () => {}; },
-  } });
-  assert.deepEqual(registrations.map(r => r.options.name).sort(), ['main', 'sidebar.panellist']);
-  assert.equal(registrations.find(r => r.options.name === 'main').options.key, 'dsh-desktop-center');
-  assert.equal(registrations.find(r => r.options.name === 'sidebar.panellist').options.id, 'dsh-desktop-center');
+  plugin.apply({
+    slots: {
+      inject(name, callback) {
+        callback();
+      },
+      register(options, view) {
+        registrations.push({ options, view });
+        return () => {};
+      },
+    },
+  });
+  assert.deepEqual(registrations.map((r) => r.options.name).sort(), ['main', 'sidebar.panellist']);
+  assert.equal(
+    registrations.find((r) => r.options.name === 'main').options.key,
+    'dsh-desktop-center',
+  );
+  assert.equal(
+    registrations.find((r) => r.options.name === 'sidebar.panellist').options.id,
+    'dsh-desktop-center',
+  );
 });
 
 test('Skill management route validates requests before applying a single target operation', async () => {
   const calls = [];
   const route = makeRoutes({
-    manageSkill: async input => { calls.push(input); return { destination: '/test/skills/sample' }; },
-  }).find(route => route.path === ROUTES.skills);
-  const request = (data, headers = {}) => new Request('http://localhost' + route.path, {
-    method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(data),
-  });
+    manageSkill: async (input) => {
+      calls.push(input);
+      return { destination: '/test/skills/sample' };
+    },
+  }).find((route) => route.path === ROUTES.skills);
+  const request = (data, headers = {}) =>
+    new Request('http://localhost' + route.path, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...headers },
+      body: JSON.stringify(data),
+    });
   const action = { action: 'install', target: 'qoder-cn', name: 'sample', source: '/test/source' };
-  assert.equal((await route.fetch(request(action, { 'sec-fetch-site': 'cross-site' }))).status, 403);
+  assert.equal(
+    (await route.fetch(request(action, { 'sec-fetch-site': 'cross-site' }))).status,
+    403,
+  );
   assert.equal((await route.fetch(request({ ...action, target: 'codex-desktop' }))).status, 400);
   assert.equal((await route.fetch(request({ ...action, name: '../outside' }))).status, 400);
   assert.equal((await route.fetch(request({ ...action, source: 'relative' }))).status, 400);

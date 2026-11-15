@@ -8,17 +8,17 @@
 
 ## 阶段门禁
 
-| 阶段 | 自动门禁 | 人工/环境证据 |
-|---|---|---|
-| PR 初审 | Node 测试、ESM 语法、ESLint、Prettier、类型声明 | 契约变更评审、边界和数据敏感度 |
-| 代码合并 | 所有 PR 门禁通过；新增行为配回归测试 | Maintainer 审查安全与兼容性 |
-| 安装验证 | 产出 Bundle 内容、无额外文件或密钥 | 真实 DSH API、Host 生命周期、Mac App 版本 |
-| UI 验收 | 实际可运行 UI 的可访问性与交互测试 | 截图、暗/亮主题、Unslop 红线评审 |
-| 发布 | 上述所有已验证；回滚演练 | 发版说明、支持矩阵、风险和降级步骤 |
+| 阶段     | 自动门禁                                        | 人工/环境证据                             |
+| -------- | ----------------------------------------------- | ----------------------------------------- |
+| PR 初审  | Node 测试、ESM 语法、ESLint、Prettier、类型声明 | 契约变更评审、边界和数据敏感度            |
+| 代码合并 | 所有 PR 门禁通过；新增行为配回归测试            | Maintainer 审查安全与兼容性               |
+| 安装验证 | 产出 Bundle 内容、无额外文件或密钥              | 真实 DSH API、Host 生命周期、Mac App 版本 |
+| UI 验收  | 实际可运行 UI 的可访问性与交互测试              | 截图、暗/亮主题、Unslop 红线评审          |
+| 发布     | 上述所有已验证；回滚演练                        | 发版说明、支持矩阵、风险和降级步骤        |
 
-## 受限环境说明
+## 依赖与检查
 
-当前构建环境无法解析 `registry.npmjs.org`，因此只能运行离线门禁；ESLint/Prettier/依赖安装以及 GitHub Actions 尚未在此环境运行。仓库中的 `.github/workflows/quality.yml` 是**待在线 CI 验证的配置**，不能被算成一次已成功的 CI。
+本地和 GitHub Actions 使用 `npm ci --ignore-scripts --no-audit --no-fund` 按锁文件安装依赖。发布时核对对应提交的 GitHub Actions 检查结果和 macOS 实机验收记录。
 
 `tsconfig.contracts.json` 当前只检查 `.d.ts` 契约，不代表全量 JS 通过 `strict` 类型检查。待完成逐包 TypeScript 迁移后才启用整仓严格类型检查。
 

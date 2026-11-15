@@ -18,8 +18,17 @@ for (const [from, to] of [
   await copyFile(source, target);
 }
 const manifest = JSON.parse(await readFile(join(pkg, 'package.json'), 'utf8'));
-if (manifest.dsh?.bundle?.patch !== './cordis.patch.yml' || manifest.dsh?.client?.platform !== 'web') throw new Error('Missing DSH bundle/client manifest');
-for (const file of ['lib/index.js', 'lib/client.js', 'cordis.patch.yml', 'README.md']) await stat(join(pkg, file));
-const result = spawnSync('npm', ['pack', pkg, '--pack-destination', release, '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: root, stdio: 'inherit' });
+if (
+  manifest.dsh?.bundle?.patch !== './cordis.patch.yml' ||
+  manifest.dsh?.client?.platform !== 'web'
+)
+  throw new Error('Missing DSH bundle/client manifest');
+for (const file of ['lib/index.js', 'lib/client.js', 'cordis.patch.yml', 'README.md'])
+  await stat(join(pkg, file));
+const result = spawnSync(
+  'npm',
+  ['pack', pkg, '--pack-destination', release, '--ignore-scripts', '--no-audit', '--no-fund'],
+  { cwd: root, stdio: 'inherit' },
+);
 if (result.status !== 0) throw new Error('npm pack failed');
 console.log('Packaged to', release);

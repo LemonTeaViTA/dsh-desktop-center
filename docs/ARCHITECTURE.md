@@ -47,13 +47,13 @@ flowchart TD
 
 ## 目标 Desktop
 
-| Desktop | 用户级 Skills 候选 | 不确定性 |
-|---|---|---|
-| Qoder 国际版 | `~/.qoder/skills`、共享 `~/.agents/skills` | 需按实际 Desktop 版本验证 |
-| Qoder CN | `~/.qoder-cn/skills`、共享 `~/.agents/skills` | 与国际版分开识别 |
-| WorkBuddy | `~/.workbuddy/skills` | 独立用户目录 |
-| Trae | `~/.trae/skills` | CN 版需独立核对 |
-| Codex Desktop | `~/.agents/skills`、旧版 `~/.codex/skills` | 共享目录不代表已在应用 UI 启用 |
+| Desktop       | 用户级 Skills 候选                            | 不确定性                       |
+| ------------- | --------------------------------------------- | ------------------------------ |
+| Qoder 国际版  | `~/.qoder/skills`、共享 `~/.agents/skills`    | 需按实际 Desktop 版本验证      |
+| Qoder CN      | `~/.qoder-cn/skills`、共享 `~/.agents/skills` | 与国际版分开识别               |
+| WorkBuddy     | `~/.workbuddy/skills`                         | 独立用户目录                   |
+| Trae          | `~/.trae/skills`                              | CN 版需独立核对                |
+| Codex Desktop | `~/.agents/skills`、旧版 `~/.codex/skills`    | 共享目录不代表已在应用 UI 启用 |
 
 ## 验收与版本
 

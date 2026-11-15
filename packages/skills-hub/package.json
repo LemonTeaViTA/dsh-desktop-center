@@ -4,7 +4,17 @@
   "description": "Read-only Skills inventory and compatibility diff for Desktop apps",
   "type": "module",
   "main": "./index.js",
-  "files": ["index.js", "src", "cordis.patch.yml"],
-  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
-  "engines": { "node": ">=20" }
+  "files": [
+    "index.js",
+    "src",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  }
 }

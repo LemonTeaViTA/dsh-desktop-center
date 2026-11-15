@@ -12,7 +12,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      # No lockfile yet because the initial environment cannot reach npm.
-      # Before production, generate and review package-lock.json, then use npm ci.
-      - run: npm install --ignore-scripts --no-audit --no-fund
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: npm run quality
