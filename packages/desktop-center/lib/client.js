@@ -7,7 +7,7 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.12';
+    const CLIENT_VERSION = '0.3.0-rc.13';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `

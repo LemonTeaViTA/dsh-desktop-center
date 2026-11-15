@@ -28,7 +28,7 @@
 - 通过一个 `dsh-desktop-center` Bundle 安装、检查 `desktopRegistry`/`skillsHub`/`desktopCenter` 服务；整体卸载验证依赖与路由清理。
 - 只读扫描零写入，对配置不存在、WorkBuddy 未核实路径给明确未知状态。
 - 有 UI 时：Slots 在真实 Client 中存在，Host RPC 权限正确、无泄露凭据，所有 UI 状态可复现。
-- 本项目保持只读。任何新增写入能力均超出范围，应停止合并并重新讨论是否属于另一个插件。
+- 扫描保持只读。管理操作须明确用户选择的目标，验证目标隔离、冲突和失败恢复。
 
 ## 禁止的“验证替代品”
 

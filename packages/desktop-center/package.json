@@ -1,6 +1,6 @@
 {
   "name": "dsh-desktop-center",
-  "version": "0.3.0-rc.12",
+  "version": "0.3.0-rc.13",
   "description": "Read-only DSH Desktop Center: desktop inventory and Skills comparison panel",
   "type": "module",
   "main": "./lib/index.js",
@@ -13,7 +13,8 @@
     "lib",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "bin"
   ],
   "dsh": {
     "bundle": {
@@ -43,5 +44,8 @@
   ],
   "dependencies": {
     "@iarna/toml": "2.2.5"
+  },
+  "bin": {
+    "dsh-manage-skill": "./bin/manage-skill.js"
   }
 }
