@@ -37,7 +37,7 @@ test('host exposes independent services and the expected authenticated query and
   assert.equal(services.get('skillsHub').version, 2);
   assert.equal(services.get('desktopCenter').version, 1);
   assert.deepEqual([...routes.keys()].sort(), Object.values(ROUTES).sort());
-  assert.ok([...routes.values()].every(r => r.methods.join() === (r.path === ROUTES.skills ? 'POST' : 'GET') && r.requestBody === 'buffered'));
+  assert.ok([...routes.values()].every(r => r.methods.join() === ([ROUTES.skills, ROUTES.mcp].includes(r.path) ? 'POST' : 'GET') && r.requestBody === 'buffered'));
   const health = await routes.get(ROUTES.health).fetch(new Request('https://example.com' + ROUTES.health));
   assert.equal(health.status, 200);
   assert.equal((await health.json()).data.version, VERSION);

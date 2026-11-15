@@ -56,3 +56,8 @@ export type SkillManagementRequest =
   | { action: 'install'; target: SkillManagementTarget; name: string; source: string }
   | { action: 'uninstall'; target: SkillManagementTarget; name: string };
 export type SkillManagementResult = { destination: string; backup?: string };
+
+export type McpManagementTarget = 'qoder-global' | 'qoder-cn';
+export type McpManagementRequest =
+  | { action: 'add'; target: McpManagementTarget; name: string; config: Record<string, unknown> }
+  | { action: 'remove'; target: McpManagementTarget; name: string };

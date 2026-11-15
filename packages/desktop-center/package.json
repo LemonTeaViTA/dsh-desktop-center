@@ -1,6 +1,6 @@
 {
   "name": "dsh-desktop-center",
-  "version": "0.3.0-rc.15",
+  "version": "0.3.0-rc.16",
   "description": "DSH Desktop Center: desktop inventory, Skills comparison and Qoder Skills management",
   "type": "module",
   "main": "./lib/index.js",

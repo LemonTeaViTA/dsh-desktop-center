@@ -1,8 +1,8 @@
 /**
- * DSH Desktop Center V0.3 Host, read-only.
+ * DSH Desktop Center V0.3 Host.
  * The individual Registry and Skills implementations remain separate pure
  * modules and expose separately versioned Cordis services. This package is
- * their single-install entry point; no Desktop settings are written.
+ * their single-install entry point.
  */
 import { createDesktopRegistry } from './registry/service.js';
 import { homedir } from 'node:os';
@@ -10,16 +10,18 @@ import { join } from 'node:path';
 import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readCodexPlugins, readTraeExtensions } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
+import { isMcpManagementRequest, manageQoderMcp, qoderProfiles } from './mcp-management.js';
 import { isSkillManagementRequest, manageSkill } from './skill-management.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.15';
+export const VERSION = '0.3.0-rc.16';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
   health: '/api/dsh-desktop-center/health',
   skills: '/api/dsh-desktop-center/skills/manage',
+  mcp: '/api/dsh-desktop-center/mcp/manage',
 });
 
 const noCache = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
@@ -60,7 +62,7 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
           return { ...desktop, mcp, plugins };
         }
         if (desktop.id === 'zcode') return { ...desktop, mcp: await readZCodeMcp(home) };
-        const directory = { 'qoder-global': '.qoder', 'qoder-cn': '.qoder-cn' }[desktop.id];
+        const directory = qoderProfiles.get(desktop.id);
         if (!directory) return desktop;
         const [mcp, plugins] = await Promise.all([
           readQoderMcp(join(home, directory, 'settings.json')),
@@ -83,6 +85,10 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
       };
     },
     comparison: () => skillsHub.compare(),
+    manageMcp(input) {
+      if (platform !== 'darwin') throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
+      return manageQoderMcp({ ...input, home });
+    },
     manageSkill(input) {
       if (platform !== 'darwin') throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
       return manageSkill({ ...input, home });
@@ -112,8 +118,13 @@ export function makeRoutes(center) {
       }
     },
   }));
-  return [...queries, {
-    path: ROUTES.skills,
+  const management = [
+    { path: ROUTES.skills, validate: isSkillManagementRequest,
+      apply: ({ action, target, name, source }) => center.manageSkill({ action, target, name, source }) },
+    { path: ROUTES.mcp, validate: isMcpManagementRequest,
+      apply: ({ action, target, name, config }) => center.manageMcp({ action, target, name, config }) },
+  ].map(({ path, validate, apply }) => ({
+    path,
     methods: ['POST'],
     requestBody: 'buffered',
     async fetch(request) {
@@ -123,19 +134,20 @@ export function makeRoutes(center) {
         return json({ ok: false, error: 'INVALID_REQUEST' }, 415);
       }
       const body = await request.json().catch(() => null);
-      if (!body || !isSkillManagementRequest(body)) return json({ ok: false, error: 'INVALID_REQUEST' }, 400);
-      const { action, target, name, source } = body;
+      if (!body || !validate(body)) return json({ ok: false, error: 'INVALID_REQUEST' }, 400);
       try {
-        return json({ ok: true, data: await center.manageSkill({ action, target, name, source }) });
+        return json({ ok: true, data: await apply(body) });
       } catch (error) {
-        if (error.code === 'SKILL_EXISTS' || error.code === 'EEXIST') return json({ ok: false, error: 'CONFLICT' }, 409);
+        if (['SKILL_EXISTS', 'MCP_EXISTS', 'EEXIST', 'SETTINGS_CHANGED'].includes(error.code)) return json({ ok: false, error: 'CONFLICT' }, 409);
+        if (error.code === 'INVALID_SETTINGS' || error.code === 'ELOOP') return json({ ok: false, error: 'INVALID_SETTINGS' }, 422);
         if (error.code === 'ENOENT') return json({ ok: false, error: 'NOT_FOUND' }, 404);
         if (error.code === 'EPERM' || error.code === 'EACCES') return json({ ok: false, error: 'FORBIDDEN' }, 403);
         if (error.code === 'UNSUPPORTED_PLATFORM') return json({ ok: false, error: 'UNSUPPORTED_PLATFORM' }, 400);
         return json({ ok: false, error: 'MANAGEMENT_FAILED' }, 422);
       }
     },
-  }];
+  }));
+  return [...queries, ...management];
 }
 
 export function apply(ctx) {

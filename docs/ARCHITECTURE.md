@@ -8,7 +8,7 @@
 
 **不包含**：SuperAgent 任务编排、应用会话控制、CLI 执行器、账号签到、积分、插件安装、自动 Skills 分发或同步。这些若启动应归入与本项目独立的插件，不在此仓库记录其未实现接口或向用户承诺功能。
 
-Qoder 两版的用户 Skills 安装与卸载可通过本地管理命令或 DSH Desktop 面板执行。每次明确指定应用和 Skill 目录名；安装从本地目录复制，卸载移入对应应用下的恢复目录。MCP 写入列为后续管理阶段。
+Qoder 两版的用户 Skills 安装与卸载可通过本地管理命令或 DSH Desktop 面板执行。每次明确指定应用和 Skill 目录名；安装从本地目录复制，卸载移入对应应用下的恢复目录。Qoder 两版的用户级 MCP 支持单服务添加和移除，保留文件里的其他配置。
 
 ## 实现组成
 
@@ -32,6 +32,7 @@ flowchart TD
 - `desktopCenter` V1：`overview()`、`comparison()`。
 - DSH 认证只读 GET：`/api/dsh-desktop-center/health`、`/api/dsh-desktop-center/overview`、`/api/dsh-desktop-center/comparison`。
 - Skills 管理通过 DSH owner 专用 POST `/api/dsh-desktop-center/skills/manage`。Desktop 面板使用宿主目录选择器，确认应用及来源后提交。
+- MCP 管理通过 DSH owner 专用 POST `/api/dsh-desktop-center/mcp/manage`，支持 Qoder 两版的 `settings.json`。写入冲突时返回结果供用户刷新后重新确认。
 - 客户端 ID、侧边栏 ID 与主页面 ID 统一使用 `dsh-desktop-center`。
 
 正式接口见 `contracts/index.d.ts`；真实 DSH 调用兼容性尚待 macOS 实机验证，不能凭本地模拟视为宿主兼容性已经证实。
