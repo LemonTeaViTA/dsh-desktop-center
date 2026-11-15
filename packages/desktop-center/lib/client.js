@@ -9,46 +9,47 @@ window.__ModuleLoader__.load({
     const PAGE_ID = 'dsh-desktop-center';
     const URL_MANAGE_MCP = '/api/dsh-desktop-center/mcp/manage';
     const URL_MANAGE_SKILL = '/api/dsh-desktop-center/skills/manage';
-    const CLIENT_VERSION = '0.3.0-rc.18';
+    const CLIENT_VERSION = '0.3.0-rc.19';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
       .sdc-panel{box-sizing:border-box;display:flex;flex-direction:column;width:100%;height:100%;max-height:100dvh;min-height:0;min-width:0}
-      .sdc-viewport{flex:1;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior-y:contain;-webkit-app-region:no-drag}
+      .sdc-viewport{flex:1;min-height:0;min-width:0;overflow-y:auto;overscroll-behavior-y:contain;container-type:inline-size;-webkit-app-region:no-drag}
       .sdc{box-sizing:border-box;padding:28px clamp(18px,4vw,48px) 52px;max-width:1400px;margin:0 auto;width:100%;color:inherit;font-family:inherit}
       .sdc *{box-sizing:border-box}.sdc button,.sdc input{font:inherit}.sdc button{cursor:pointer}
-      .sdc-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px;flex-wrap:wrap}
-      .sdc-eyebrow{text-transform:uppercase;font-size:11px;font-weight:650;letter-spacing:.11em;opacity:.58}
-      .sdc h1{margin:6px 0 4px;line-height:1.15;letter-spacing:-.045em;font-size:clamp(24px,3.8vw,34px)}
+      .sdc-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+      .sdc h1{margin:0;line-height:1.2;letter-spacing:-.03em;font-size:clamp(24px,3.8vw,32px)}
       .sdc p{margin:0;line-height:1.55}.sdc-muted{opacity:.65;font-size:13px}
       .sdc-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-size:11px;font-weight:650;background:color-mix(in srgb,currentColor 7%,transparent);white-space:nowrap}
-      .sdc-pill[data-tone=good]{color:#139769;background:color-mix(in srgb,#139769 13%,transparent)}
-      .sdc-pill[data-tone=warn]{color:#b2781f;background:color-mix(in srgb,#c48a25 12%,transparent)}
+      .sdc-pill[data-tone=good]{background:color-mix(in srgb,#139769 13%,transparent)}
+      .sdc-pill[data-tone=warn]{background:color-mix(in srgb,#c48a25 13%,transparent)}
+      .sdc-pill[data-tone=good]::before,.sdc-pill[data-tone=warn]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--sdc-pill-dot)}
+      .sdc-pill[data-tone=good]{--sdc-pill-dot:#139769}.sdc-pill[data-tone=warn]{--sdc-pill-dot:#c48a25}
       .sdc-pill[data-tone=muted]{opacity:.72}
-      .sdc-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:24px}
-      .sdc-stat,.sdc-card,.sdc-pane{border:1px solid color-mix(in srgb,currentColor 12%,transparent);border-radius:13px;background:color-mix(in srgb,currentColor 2.5%,transparent)}
-      .sdc-stat{padding:18px 20px}.sdc-stat strong{display:block;font-size:29px;letter-spacing:-.045em;line-height:1.18}
-      .sdc-stat span{display:block;font-size:12px;opacity:.62;margin-top:9px}
+      .sdc-card,.sdc-pane{border:1px solid color-mix(in srgb,currentColor 15%,transparent);border-radius:12px}
       .sdc-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 18px}
       .sdc-tabs{display:flex;flex-wrap:wrap;gap:3px;border-radius:10px;padding:4px;background:color-mix(in srgb,currentColor 6%,transparent)}
       .sdc-tab{padding:7px 13px;border:0;background:transparent;color:inherit;border-radius:7px;font-size:12px;opacity:.66}
-      .sdc-tab[aria-selected=true]{background:var(--sdc-accent,#2e77de);color:#fff;opacity:1}
-      .sdc-actions{display:flex;gap:9px;align-items:center}.sdc-field{border:1px solid color-mix(in srgb,currentColor 17%,transparent);border-radius:8px;padding:9px 10px;background:transparent;color:inherit;width:160px;font-size:12px}
+      .sdc-tab[aria-current=page]{background:var(--sdc-accent,#245eb8);color:#fff;opacity:1}
+      .sdc-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}.sdc-field{border:1px solid color-mix(in srgb,currentColor 22%,transparent);border-radius:8px;padding:9px 10px;background:transparent;color:inherit;width:160px;max-width:100%;min-width:0;font-size:12px}
       .sdc-btn{border:1px solid color-mix(in srgb,currentColor 18%,transparent);padding:9px 14px;border-radius:8px;background:transparent;color:inherit;font-size:12px;font-weight:600}
-      .sdc-btn:disabled{opacity:.45;cursor:wait}.sdc-btn:focus-visible,.sdc-tab:focus-visible,.sdc-field:focus-visible{outline:2px solid #3c88f0;outline-offset:2px}
+      .sdc-btn:disabled{opacity:.45;cursor:default}.sdc :focus-visible{outline:2px solid #3c88f0;outline-offset:2px}
       .sdc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
       .sdc-card{padding:20px;min-width:0}.sdc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-      .sdc-name{font-size:15px;font-weight:690;letter-spacing:-.015em}.sdc-kicker{font-size:11px;opacity:.57;margin-top:5px}
+      .sdc-name{margin:0;font-size:16px;font-weight:650}.sdc-kicker{font-size:13px;margin-top:4px}
       .sdc-list{margin:13px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
       .sdc-list li{font-size:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
       .sdc-path{opacity:.67;overflow-wrap:anywhere;min-width:0;line-height:1.5}
       .sdc-ind{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.22;display:inline-block;margin-right:7px}
       .sdc-ind[data-on=true]{background:#15a877;opacity:1}
-      .sdc-pane{overflow:hidden}.sdc-pane-title{padding:18px 20px;border-bottom:1px solid color-mix(in srgb,currentColor 9%,transparent);font-weight:650;font-size:14px}
-      .sdc-skill-group{padding:20px}
+      .sdc-pane-title{padding:16px 20px;border-bottom:1px solid color-mix(in srgb,currentColor 12%,transparent);font-weight:650;font-size:16px}
+      .sdc-pane-title h2{margin:8px 0;font-size:22px}
+      .sdc-detail-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+      .sdc-details{padding:12px 20px}.sdc-details summary{cursor:pointer;width:fit-content;font-size:14px}
+      .sdc-skill-group{padding:16px 20px;min-width:0}
       .sdc-skill-group+.sdc-skill-group{border-top:1px solid color-mix(in srgb,currentColor 12%,transparent)}
       .sdc-skill-heading{display:flex;align-items:baseline;gap:8px 12px;flex-wrap:wrap;margin-bottom:8px}
-      .sdc-skill-heading h2{margin:0;font-size:16px}
+      .sdc-skill-heading h2,.sdc-skill-heading h3{margin:0;font-size:16px}
       .sdc-skill-list{list-style:none;margin:0;padding:0}
       .sdc-skill-item{padding:12px 0;overflow-wrap:anywhere}
       .sdc-skill-item+.sdc-skill-item{border-top:1px solid color-mix(in srgb,currentColor 9%,transparent)}
@@ -59,15 +60,15 @@ window.__ModuleLoader__.load({
       .sdc-skill-item details ul{margin:6px 0 0;padding-inline-start:20px}
       .sdc-batch-target{display:inline-flex;align-items:center;gap:6px;margin-inline-end:16px}
       .sdc-mcp-form{display:grid;gap:8px;justify-items:start;margin-block:12px}.sdc-mcp-form label{display:grid;gap:4px;width:100%;max-width:32rem}.sdc-mcp-form .sdc-field{width:100%}
-      .sdc-scroll{max-width:100%;overflow:auto}.sdc-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px;min-width:630px}
+      .sdc-scroll{max-width:100%;overflow:auto}.sdc-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px;min-width:400px}
       .sdc-table th{font-size:11px;white-space:nowrap;opacity:.62;font-weight:650}.sdc-table td,.sdc-table th{padding:12px 15px;border-bottom:1px solid color-mix(in srgb,currentColor 8%,transparent)}
       .sdc-table tr:last-child td{border-bottom:0}.sdc-table td:first-child{font-weight:610}
       .sdc-empty{padding:42px 24px;text-align:center;color:inherit}.sdc-empty strong{display:block;font-size:15px;margin-bottom:6px}
       .sdc-foot{font-size:11px;opacity:.6;margin-top:24px;line-height:1.65}
       .sdc-alert{border:1px solid color-mix(in srgb,#db8c20 36%,transparent);border-radius:10px;background:color-mix(in srgb,#db8c20 8%,transparent);padding:14px 16px;font-size:13px;margin:0 0 18px}
       .sdc-alert[data-error=true]{border-color:color-mix(in srgb,#c63c3c 38%,transparent);background:color-mix(in srgb,#c63c3c 8%,transparent)}
-      @media(max-width:870px){.sdc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.sdc-grid{grid-template-columns:1fr}}
-      @media(max-width:520px){.sdc{padding:20px 14px 32px}.sdc-stat{padding:14px}.sdc-stat strong{font-size:24px}.sdc-field{width:120px}.sdc-actions{width:100%}.sdc-actions .sdc-field{flex:1}}
+      @container(max-width:660px){.sdc-grid{grid-template-columns:1fr}}
+      @container(max-width:460px){.sdc{padding:16px 12px 32px}.sdc-card,.sdc-pane-title,.sdc-skill-group,.sdc-details{padding-inline:12px}.sdc-toolbar>.sdc-actions{width:100%}.sdc-toolbar .sdc-field{flex:1}.sdc-alert{padding-inline:10px}}
       @media(prefers-reduced-motion:reduce){.sdc *{scroll-behavior:auto!important}}
     `;
 
@@ -96,21 +97,27 @@ window.__ModuleLoader__.load({
     }
     function Card({ desktop, onOpen }) {
       const state = statusInfo(desktop.status);
-      const roots = desktop.skillRoots || [];
+      const count = desktop.skillRoots.length ? desktop.skills.length + ' 个 Skills' : '';
+      const serviceCount = desktop.mcp?.status === 'read' ? desktop.mcp.servers.length + ' 个 MCP 服务' : '';
       return h('article', { className: 'sdc-card' },
         h('div', { className: 'sdc-head' },
-          h('div', null, h('div', { className: 'sdc-name' }, desktop.label),
-            h('div', { className: 'sdc-kicker' }, desktop.skills.length + ' 个 Skills · ' + desktop.appPaths.length + ' 个安装位置')),
+          h('div', null, h('h2', { className: 'sdc-name' }, desktop.label),
+            count || serviceCount ? h('p', { className: 'sdc-kicker sdc-muted' }, [count, serviceCount].filter(Boolean).join(' · ')) : null),
           h(Pill, { label: state.text, tone: state.tone })),
+        h('button', { type: 'button', className: 'sdc-btn', id: 'sdc-open-' + desktop.id,
+          'aria-label': '查看 ' + desktop.label + ' 详情', onClick: onOpen }, '查看详情'));
+    }
+    function DesktopPaths({ desktop }) {
+      const roots = desktop.skillRoots || [];
+      return h('details', { className: 'sdc-details' },
+        h('summary', null, '应用与扫描路径'),
         h('ul', { className: 'sdc-list' },
           ...desktop.appPaths.map(p => h('li', { key: 'app:' + p }, h('span', { className: 'sdc-path' }, p), h(Pill, { label: '应用' }))),
-          ...roots.slice(0, 5).map(root => h('li', { key: 'root:' + root.path },
+          ...roots.map(root => h('li', { key: 'root:' + root.path },
             h('span', { className: 'sdc-path' }, h('span', { className: 'sdc-ind', 'data-on': String(root.exists) }), root.path, root.scope === 'shared' ? '（共享）' : ''),
             h('span', { className: 'sdc-muted' }, root.error ? '读取失败' : root.exists ? '已发现' : '未找到'))),
           ...(desktop.appPaths.length === 0 && roots.length === 0 ? [h('li', { key: 'none', className: 'sdc-muted' }, '尚无已验证的配置路径')] : [])),
-        ...(desktop.notes || []).map((note, i) => h('p', { key: i, className: 'sdc-muted', style: { marginTop: 10 } }, note)),
-        h('button', { type: 'button', className: 'sdc-btn', style: { marginTop: 12 },
-          'aria-label': '查看 ' + desktop.label + ' 详情', onClick: onOpen }, '查看详情'));
+        ...(desktop.notes || []).map(note => h('p', { key: note, className: 'sdc-muted' }, note)));
     }
     const skillIssueLabels = {
       HIDDEN_CONTENT_UNVERIFIED: '隐藏文件未参与比较',
@@ -131,11 +138,12 @@ window.__ModuleLoader__.load({
           [skill.name, skill.directoryName, skill.description, desktop.label].some(value =>
             value?.toLowerCase().includes(search))),
       })).filter(({ desktop, skills }) =>
-        !search || skills.length || desktop.label.toLowerCase().includes(search));
+        !showDesktop || !search || skills.length || desktop.label.toLowerCase().includes(search));
       if (!groups.length) return h(Empty, { title: '没有匹配的 Skills', subtitle: '试试 Skill 名称、简介或桌面应用名称。' });
       return groups.map(({ desktop, skills }) => {
         const headingId = 'sdc-skills-' + desktop.id;
-        const emptyMessage = !desktop.skillRoots.length ? '当前未覆盖此应用的 Skills 路径。' :
+        const emptyMessage = desktop.skills.length && search ? '没有匹配的 Skills。' :
+          !desktop.skillRoots.length ? '当前未覆盖此应用的 Skills 路径。' :
           desktop.skillRoots.some(root => root.error) || desktop.diagnostics.length ? 'Skills 扫描不完整，请查看诊断。' :
           desktop.skillRoots.some(root => root.exists) ? '已扫描的目录中没有 Skills。' : '未找到已知的 Skills 目录。';
         return h('section', { key: desktop.id, className: 'sdc-skill-group', 'aria-labelledby': headingId },
@@ -166,7 +174,7 @@ window.__ModuleLoader__.load({
       const filtered = rows.filter(r => r.name.toLowerCase().includes(search));
       if (!filtered.length) return h(Empty, { title: '没有差异记录', subtitle: '刷新后可查看不同 Desktop 的 Skill 包状态。' });
       const status = { same: '相同', different: '有差异', missing: '未扫描到', unknown: '无法比较', conflict: '冲突' };
-      return h('div', { className: 'sdc-scroll' }, h('table', { className: 'sdc-table' },
+      return h('div', { className: 'sdc-scroll', role: 'region', tabIndex: 0, 'aria-label': 'Skills 差异对比表' }, h('table', { className: 'sdc-table' },
         h('thead', null, h('tr', null, h('th', null, 'Skill'), ...desktops.map(d => h('th', { key: d.id }, d.label)))),
         h('tbody', null, ...filtered.map(r => h('tr', { key: r.name },
           h('td', null, r.name), ...desktops.map(d => {
@@ -204,31 +212,33 @@ window.__ModuleLoader__.load({
         resourceStatus(desktop.mcp, desktop.mcp?.servers),
         resourceStatus(desktop.plugins, desktop.plugins?.entries),
       ]).filter(row => row.some(value => value.toLowerCase().includes(search)));
-      const table = (headings, data) => h('div', { className: 'sdc-scroll' }, h('table', { className: 'sdc-table' },
+      const table = (label, headings, data) => h('div', { className: 'sdc-scroll', role: 'region', tabIndex: 0, 'aria-label': label }, h('table', { className: 'sdc-table' },
         h('thead', null, h('tr', null, ...headings.map(title => h('th', { key: title, scope: 'col' }, title)))),
         h('tbody', null, ...data.map((row, index) => h('tr', { key: index },
           ...row.map((value, column) => h('td', { key: column }, value)))))));
       return h(React.Fragment, null,
-        filtered.length ? table(['Desktop', '扫描项目', '原因'], filtered) :
+        filtered.length ? table('扫描问题', ['Desktop', '扫描项目', '原因'], filtered) :
           h(Empty, { title: search ? '没有匹配的扫描诊断' : '没有需要处理的扫描诊断' }),
-        coverage.length ? h('details', null, h('summary', null, '查看各应用的扫描范围'),
-          table(['Desktop', 'Skills', 'MCP', '用户插件 / 扩展'], coverage)) : null);
+        coverage.length ? h('details', { className: 'sdc-details' }, h('summary', null, '查看各应用的扫描范围'),
+          table('应用扫描范围', ['Desktop', 'Skills', 'MCP', '用户插件 / 扩展'], coverage)) : null);
     }
     function McpList({ desktop, reload, enabled, heading = 'MCP', search = '' }) {
       const { mcp } = desktop;
       const headingId = 'sdc-mcp-heading-' + desktop.id;
+      const matching = mcp?.servers.filter(server => server.name.toLowerCase().includes(search)) ?? [];
       const messages = {
         missing: '未找到该应用的用户配置文件。',
         unreadable: '无法读取或解析该应用的用户配置。',
       };
       return h('section', { className: 'sdc-skill-group', 'aria-labelledby': headingId },
-        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: headingId }, heading)),
+        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: headingId, tabIndex: -1 }, heading)),
         enabled && managedSkillTargets.has(desktop.id) && typeof window.__DSH_DIRECTORY_PICKER__?.pick === 'function'
           ? h(McpManagement, { desktops: [desktop], reload }) : null,
         !mcp ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的 MCP 配置。') :
         mcp.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[mcp.status]) :
         mcp.servers.length === 0 ? h('p', { className: 'sdc-muted' }, '用户配置中没有 MCP 服务。') :
-        h('ul', { className: 'sdc-skill-list' }, ...mcp.servers.filter(server => server.name.toLowerCase().includes(search)).map(server =>
+        !matching.length ? h('p', { className: 'sdc-muted' }, '没有匹配的 MCP 服务。') :
+        h('ul', { className: 'sdc-skill-list' }, ...matching.map(server =>
           h('li', { className: 'sdc-skill-item', key: server.name },
             h('div', { className: 'sdc-skill-heading' }, h('h3', null, server.name),
               h('span', { className: 'sdc-muted' }, server.enabled === false ? '配置中已停用' : '已配置'))))));
@@ -352,17 +362,19 @@ window.__ModuleLoader__.load({
           });
         }) : h(Empty, { title: '没有匹配的 MCP 服务', subtitle: '试试服务名称或桌面应用名称。' }));
     }
-    function PluginList({ plugins, configured, extensions }) {
+    function PluginList({ plugins, configured, extensions, search }) {
+      const matching = plugins?.entries.filter(entry => entry.name.toLowerCase().includes(search)) ?? [];
       const messages = {
         missing: '未找到此应用的用户插件登记文件。',
         unreadable: '无法读取或识别此应用的插件登记格式。',
       };
       return h('section', { className: 'sdc-skill-group', 'aria-labelledby': 'sdc-plugin-heading' },
-        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading' }, configured ? '用户插件配置' : extensions ? '用户扩展' : '用户插件')),
+        h('div', { className: 'sdc-skill-heading' }, h('h2', { id: 'sdc-plugin-heading', tabIndex: -1 }, configured ? '用户插件配置' : extensions ? '用户扩展' : '用户插件')),
         !plugins ? h('p', { className: 'sdc-muted' }, '尚未覆盖此应用的插件清单。') :
         plugins.status !== 'read' ? h('p', { className: 'sdc-muted' }, messages[plugins.status]) :
         !plugins.entries.length ? h('p', { className: 'sdc-muted' }, configured ? '没有用户插件配置记录。' : '没有用户插件安装记录。') :
-        h('ul', { className: 'sdc-skill-list' }, ...plugins.entries.map((entry, index) =>
+        !matching.length ? h('p', { className: 'sdc-muted' }, '没有匹配的插件或扩展。') :
+        h('ul', { className: 'sdc-skill-list' }, ...matching.map((entry, index) =>
           h('li', { className: 'sdc-skill-item', key: index },
             h('div', { className: 'sdc-skill-heading' }, h('h3', null, entry.name),
               entry.version ? h('span', { className: 'sdc-muted' }, entry.version) : null,
@@ -499,11 +511,15 @@ window.__ModuleLoader__.load({
       const [desktopId, setDesktopId] = React.useState(null);
       const viewport = React.useRef(null);
       const detailHeading = React.useRef(null);
+      const restoreDesktop = React.useRef(null);
       const desktop = overview?.desktops.find(item => item.id === desktopId);
       React.useEffect(() => {
         if (desktopId) {
           detailHeading.current?.focus();
           if (viewport.current) viewport.current.scrollTop = 0;
+        } else if (restoreDesktop.current) {
+          document.getElementById('sdc-open-' + restoreDesktop.current)?.focus();
+          restoreDesktop.current = null;
         }
       }, [desktopId]);
       const refreshId = React.useRef(0);
@@ -527,30 +543,30 @@ window.__ModuleLoader__.load({
       const desktops = overview?.desktops || [];
       const query = search.trim().toLowerCase();
       const matching = desktops.filter(d => [d.label, d.id, d.status].join(' ').toLowerCase().includes(query));
-      const stat = overview?.summary;
       const tabs = [['desktops','桌面应用'],['skills','Skills 清单'],['mcp','MCP 清单'],['diff','跨端差异'],['diagnostics','诊断']];
+      const detailSections = desktop ? [
+        ['sdc-detail-skills', 'Skills'],
+        ['sdc-mcp-heading-' + desktop.id, 'MCP'],
+        ['sdc-plugin-heading', '插件 / 扩展'],
+      ] : [];
       return h('div', { className: 'sdc-panel' },
         h('div', { className: 'sdc-viewport', ref: viewport, tabIndex: 0, role: 'region', 'aria-label': 'Desktop Center 滚动区域' },
           h('main', { className: 'sdc', 'aria-label': 'Desktop Center 管理面板' },
             h('header', { className: 'sdc-hero' },
-              h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
-                h('h1', null, 'Desktop Center'),
-                h('p', { className: 'sdc-muted' }, '统一查看桌面应用、Skills 与跨应用配置差异。')),
-              h(Pill, { label: 'v' + CLIENT_VERSION, tone: 'good' })),
-            h('section', { className: 'sdc-stats', 'aria-label': '扫描统计' },
-              ...[
-                [stat?.desktopCount ?? '—', 'Desktop 目标'],
-                [stat?.installedAppCount ?? '—', '发现应用的目标'],
-                [stat?.skillOccurrences ?? '—', 'Skills 扫描记录'],
-                [stat?.diagnosticCount ?? '—', '扫描诊断'],
-              ].map(([n,label]) => h('div', { className: 'sdc-stat', key: label }, h('strong', null, String(n)), h('span', null, label)))),
+              h('h1', null, 'Desktop Center'),
+              h(Pill, { label: 'v' + CLIENT_VERSION })),
             h('div', { className: 'sdc-toolbar' },
-              h('div', { className: 'sdc-tabs', role: 'tablist', 'aria-label': '选择管理视图' },
-                ...tabs.map(([key,label]) => h('button', { type: 'button', key, role: 'tab', className: 'sdc-tab',
-                  'aria-selected': tab === key, onClick: () => { setTab(key); setDesktopId(null); setSearch(''); } }, label))),
+              h('nav', { className: 'sdc-tabs', 'aria-label': '管理视图' },
+                ...tabs.map(([key,label]) => h('button', { type: 'button', key, className: 'sdc-tab',
+                  'aria-current': tab === key ? 'page' : undefined, onClick: () => {
+                    setTab(key);
+                    setDesktopId(null);
+                    setSearch('');
+                    if (viewport.current) viewport.current.scrollTop = 0;
+                  } }, label))),
               h('div', { className: 'sdc-actions' },
                 h('input', { className: 'sdc-field', type: 'search', value: search, onChange: e => setSearch(e.target.value),
-                  'aria-label': '搜索当前视图', placeholder: desktop ? '搜索此应用的 Skills' : tab === 'skills' ? '搜索名称、简介或 Desktop' : tab === 'mcp' ? '搜索服务或 Desktop' : '搜索...' }),
+                  'aria-label': '搜索当前视图', placeholder: desktop ? '搜索此应用的资源' : tab === 'skills' ? '搜索名称、简介或 Desktop' : tab === 'mcp' ? '搜索服务或 Desktop' : '搜索...' }),
                 h('button', { type: 'button', className: 'sdc-btn', disabled: loading,
                   onClick: () => { void reload(); } }, loading ? '扫描中…' : '重新扫描'))),
             error ? h('div', { className: 'sdc-alert', 'data-error': 'true', role: 'alert' }, error) : null,
@@ -559,12 +575,26 @@ window.__ModuleLoader__.load({
             !overview ? null : desktop ?
               h('section', { className: 'sdc-pane', 'aria-labelledby': 'sdc-detail-heading' },
                 h('div', { className: 'sdc-pane-title' },
-                  h('button', { type: 'button', className: 'sdc-btn', onClick: () => { setDesktopId(null); setSearch(''); } }, '返回桌面应用'),
-                  h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label)),
-                !query ? h(McpList, { key: `mcp:${desktop.id}`, desktop, reload, enabled: overview.platform === 'darwin' }) : null,
-                !query ? h(PluginList, { plugins: desktop.plugins, configured: desktop.id === 'codex-desktop', extensions: desktop.id === 'trae' || desktop.id === 'trae-cn' }) : null,
-                h(DesktopSkills, { key: desktop.id, desktops: [desktop], search: query, reload,
-                  enabled: overview.platform === 'darwin' })) :
+                  h('button', { type: 'button', className: 'sdc-btn', onClick: () => {
+                    restoreDesktop.current = desktop.id;
+                    setDesktopId(null);
+                    setSearch('');
+                  } }, '返回桌面应用'),
+                  h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label),
+                  h('nav', { className: 'sdc-detail-tools', 'aria-label': '应用资源' },
+                    ...detailSections.map(([id, label]) => h('button', { key: id, type: 'button',
+                      className: 'sdc-btn', onClick: () => {
+                        const section = document.getElementById(id);
+                        section?.focus({ preventScroll: true });
+                        section?.scrollIntoView({ block: 'start' });
+                      } }, label)))),
+                h('div', { id: 'sdc-detail-skills', tabIndex: -1, role: 'region', 'aria-label': 'Skills' },
+                  h(DesktopSkills, { key: desktop.id, desktops: [desktop], search: query, reload,
+                    enabled: overview.platform === 'darwin' })),
+                h(McpList, { key: `mcp:${desktop.id}`, desktop, reload, search: query, enabled: overview.platform === 'darwin' }),
+                h(PluginList, { plugins: desktop.plugins, search: query, configured: desktop.id === 'codex-desktop',
+                  extensions: desktop.id === 'trae' || desktop.id === 'trae-cn' }),
+                h(DesktopPaths, { desktop })) :
             tab === 'desktops' ?
               h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
                 ...matching.map(d => h(Card, { key: d.id, desktop: d, onOpen: () => { setDesktopId(d.id); setSearch(''); } })),
