@@ -1,23 +1,34 @@
-# DSH Desktop Center v0.3.0-rc.2 · 安装与验证
+# DSH Desktop Center v0.3 · 安装与验证
 
-**安装状态：** 单 Bundle 已实现并可用 npm 离线打包；**尚未实测你的 macOS DSH Desktop**。正式安装以你当前 DSH 版本支持的官方插件管理器操作为准。
+## 安装
 
-## 首次安装
+1. 首次安装前备份 DSH Profile。包声明支持 DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22。若曾试装独立的 Registry 或 Skills Hub Bundle，先在 DSH 插件管理器禁用旧 Bundle，避免重复注册。
+2. 在 DSH 的添加插件页面输入 `https://github.com/LemonTeaViTA/dsh-desktop-center`。本地目录安装可使用仓库中 `packages/desktop-center` 的绝对路径。
+3. 要安装固定版本，可下载 [rc.20 安装包](https://github.com/LemonTeaViTA/dsh-desktop-center/blob/main/releases/dsh-desktop-center-0.3.0-rc.20.tgz)。完全退出 DSH Desktop 后，在终端使用已安装的 DSH CLI。
 
-1. 备份当前 DSH Profile，确认当前版本符合包声明：DSH `>=0.2.1-rc.2 <0.3.0-0`，Node >=22。版本不满足时不要强装。
-2. 若曾安装两个早期 V0.2 Bundle（Registry、Skills Hub），先通过官方管理器禁用或卸载，避免重复服务注册。
-3. 下载 Git 仓库 ZIP，解压到 Mac 工作目录；让 DSH Creator 使用官方 `plugin_manager install_bundle`，安装目标设为 `<解压目录>/packages/desktop-center` 的**绝对路径**。确认前检查：包名 `dsh-desktop-center`、版本 `0.3.0-rc.2`、路径与权限。
-4. 若当前插件管理器明确支持本地 `.tgz`，也可选择 `releases/dsh-desktop-center-0.3.0-rc.2.tgz`；否则使用目录方式。ZIP/TGZ 都不是双击安装的 `.dmg`。
-5. 按 DSH 返回的提示刷新或重启，侧边栏应出现 **Desktop Center**；打开四个只读标签：桌面应用、Skills 清单、跨端差异、诊断。
-6. 如 DSH 提供 Inspector，在官方认证通道下验证 GET `/api/dsh-desktop-center/health`、`/overview`、`/comparison` 与 `desktopRegistry` / `skillsHub` / `desktopCenter` 服务。
+   ```sh
+   dsh plugin --profile desktop add "/绝对路径/dsh-desktop-center-0.3.0-rc.20.tgz" --ignore-scripts
+   ```
 
-## 实机验收清单
+4. 打开 DSH Desktop，从侧边栏进入 **Desktop Center**，确认版本及本地扫描结果。应用详情提供 Skills、MCP 和插件或扩展入口。
 
-- [ ] DSH 插件管理器报告安装成功，侧边栏出现 Desktop Center。
-- [ ] 没有白屏，刷新后展示 Mac 真实扫描结果而非演示数据。
-- [ ] Qoder Global / CN 区分正确；未核实 WorkBuddy 路径显示未知。
-- [ ] Skills 包差异与 `unknown` 状态正确，错误不泄露路径/密钥。
-- [ ] 禁用/卸载后服务、路由及页面解除注册，不更改任何其他 Desktop 配置。
-- [ ] 记录系统/DSH/目标 App 版本、验证日期和脱敏日志。
+## 回退
 
-若失败，使用 DSH 插件管理器禁用/卸载；不要直接修改 `$DSH_HOME` 或其他 Desktop 的内部数据。参考 [完成标准](DEFINITION_OF_DONE.md)。
+完全退出 DSH Desktop，卸载当前 Bundle，再安装需要的旧版包并重新打开客户端。卸载 Desktop Center 不会撤销已经写入 Qoder 的 Skills 或 MCP 配置。
+
+```sh
+dsh plugin --profile desktop remove dsh-desktop-center
+dsh plugin --profile desktop add "/绝对路径/dsh-desktop-center-0.3.0-rc.19.tgz" --ignore-scripts
+```
+
+要恢复通过 Desktop Center 卸载的 Skill，先确认原位置没有同名目录，将卸载结果中记录的恢复目录移回该应用的 `skills` 目录并恢复原目录名，再重新扫描。
+
+## 实机验收记录
+
+2026-11-15 在 macOS 26.4（arm64）、DSH Desktop 0.2.2-rc.3 的独立 Profile 中完成：
+
+- 用官方 DSH CLI 从 rc.20 压缩包安装，打开侧边栏并完成本地扫描。实测 360px 面板、键盘操作及滚动。
+- 将 Qoder 国际版和国内版的测试 Skill 恢复至原目录，扫描找回后再次卸载，恢复文件与原文件一致。
+- 移除 rc.20 后重启，确认侧边栏入口消失、健康检查返回 404。安装 rc.19 后重启，确认入口、健康检查和扫描恢复。
+
+两版 Qoder 0.5.11 的隔离客户端需登录后查看资源清单。客户端刷新验收和稳定版发布进度以 [任务清单](ROADMAP.md) 为准。

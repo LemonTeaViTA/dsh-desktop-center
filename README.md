@@ -1,26 +1,25 @@
 # DSH Desktop Center
 
-**将多个 AI Desktop 的本地应用信息、Skills 清单和差异集中展示在 DSH 内。**
+**在 DSH 集中发现桌面应用，查看 Skills、MCP 与插件清单，管理 Qoder 两版的用户 Skills 和 MCP 服务。**
 
-本仓库只有一个当前产品：**DSH Desktop Center**。它不是 SuperAgent，不负责任务编排、桌面远程控制、自动签到、积分领取、Skills 安装或 MCP / 原生插件管理。这些若开发，应成为独立项目或独立插件，不属于此仓库的功能承诺。
-
-> 当前版本 **v0.3.0-rc.20（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.19 优先展示应用资源和 Skills 简介，收起扫描路径并改进键盘及窄窗口操作。rc.20 固定构建依赖并通过完整本地检查。
+> 当前版本 **v0.3.0-rc.20（预发布候选）**。已在 macOS 26.4（arm64）、DSH Desktop 0.2.2-rc.3 验证安装、面板加载、卸载和回退。Qoder 两版仍待完成客户端刷新验收。
 
 ## 已有功能
 
-| 模块                | 功能                                                                                             | 边界                                             |
-| ------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| Desktop Registry    | 只读发现 Qoder 国际版 / CN、WorkBuddy、Trae、Codex Desktop、ZCode 和豆包的本地应用候选和配置目录 | 路径存在不代表应用正在运行、账户已登录或接口连通 |
-| Skills Inventory    | 只读扫描 Skills 目录、SKILL.md 元数据、整包 SHA-256 指纹                                         | 不运行 Skill 中的脚本，不安装/同步/编辑 Skills   |
-| Skills Comparison   | 按 Desktop 展示 Skills 差异和 `unknown` 状态                                                     | 对无法验证的文件不报告为一致                     |
-| Desktop Center 面板 | DSH 侧边栏入口、搜索、刷新和扫描诊断                                                             | Qoder 详情提供单端 Skills 管理                   |
+| 模块               | 功能                                                                                             | 边界                                             |
+| ------------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Desktop Registry   | 只读发现 Qoder 国际版 / CN、WorkBuddy、Trae、Codex Desktop、ZCode 和豆包的本地应用候选和配置目录 | 路径存在不代表应用正在运行、账户已登录或接口连通 |
+| Skills Inventory   | 只读扫描 Skills 目录、SKILL.md 元数据、整包 SHA-256 指纹                                         | 不运行 Skill 中的脚本，不安装/同步/编辑 Skills   |
+| Skills Comparison  | 按 Desktop 展示 Skills 差异和 `unknown` 状态                                                     | 对无法验证的文件不报告为一致                     |
+| 应用资源详情       | 按应用浏览 Skills 简介、MCP、用户插件或扩展                                                      | 展示范围以扫描诊断中的应用覆盖状态为准           |
+| Skills 和 MCP 管理 | 在 Qoder 国际版和国内版单独或批量安装、卸载 Skills，添加、移除 MCP                               | 用户选择目标，确认后写入。Skills 卸载可恢复      |
 
-WorkBuddy 扫描独立的用户 Skills 目录。Desktop 清单扫描只读。Qoder 用户级 Skills 可从详情页或管理命令操作。
+WorkBuddy 扫描独立的用户 Skills 目录。豆包支持应用发现，本地资源清单来源尚待验证。
 
-## 安装（待实机验证）
+## 安装
 
 - **插件包：** `releases/dsh-desktop-center-0.3.0-rc.20.tgz`
-- **目录安装：** `packages/desktop-center/`（首次建议通过 DSH 官方插件管理器/Creator `plugin_manager install_bundle` 使用本地目录）
+- **GitHub 安装：** 在 DSH 的添加插件页面输入 `https://github.com/LemonTeaViTA/dsh-desktop-center`。本地也可通过官方插件管理器安装 `packages/desktop-center/`。
 - **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
 - **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。
 
@@ -35,7 +34,7 @@ npm test
 npm run pack:desktop-center
 ```
 
-有联网的 npm 开发环境可以安装审查后的依赖并执行 `npm run quality`（ESLint、Prettier、TypeScript、测试）。本开发环境未完成完整 lint/format 和 GitHub CI 实际运行，不得将这些项目标注为通过。
+使用 `npm ci --ignore-scripts --no-audit --no-fund` 安装锁定的依赖，再运行 `npm run quality`。候选版 rc.20 已在本地和 [GitHub Actions](https://github.com/LemonTeaViTA/dsh-desktop-center/actions/runs/43701270831) 通过完整检查。
 
 ```text
 packages/desktop-center/   单入口 Bundle（Host + Client + 聚合与管理 API）
