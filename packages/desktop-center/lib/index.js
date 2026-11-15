@@ -15,7 +15,7 @@ import { isSkillManagementRequest, manageSkill } from './skill-management.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.16';
+export const VERSION = '0.3.0-rc.17';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',

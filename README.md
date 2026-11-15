@@ -4,7 +4,7 @@
 
 本仓库只有一个当前产品：**DSH Desktop Center**。它不是 SuperAgent，不负责任务编排、桌面远程控制、自动签到、积分领取、Skills 安装或 MCP / 原生插件管理。这些若开发，应成为独立项目或独立插件，不属于此仓库的功能承诺。
 
-> 当前版本 **v0.3.0-rc.16（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.16 在 DSH 面板加入 Qoder 两版用户级 MCP 单端管理。
+> 当前版本 **v0.3.0-rc.17（开源候选）**。rc.2 已在 macOS DSH Desktop 验证安装、面板加载和首次扫描。rc.4 的滚动修复已在 DSH Desktop 复测，rc.6 的 Desktop 详情和 Codex MCP 清单已实测。rc.17 在 MCP 清单加入两版 Qoder 的批量管理。
 
 ## 已有功能
 
@@ -19,7 +19,7 @@ WorkBuddy 扫描独立的用户 Skills 目录。Desktop 清单扫描只读。Qod
 
 ## 安装（待实机验证）
 
-- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.16.tgz`
+- **插件包：** `releases/dsh-desktop-center-0.3.0-rc.17.tgz`
 - **目录安装：** `packages/desktop-center/`（首次建议通过 DSH 官方插件管理器/Creator `plugin_manager install_bundle` 使用本地目录）
 - **详细步骤：** [安装与验收指南](docs/INSTALLATION_V0.3.md)
 - **声明目标：** DSH `>=0.2.1-rc.2 <0.3.0-0`、Node >=22；是开发声明，不代表实际设备兼容性已被证明。
