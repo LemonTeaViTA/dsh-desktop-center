@@ -22,7 +22,7 @@ test('single-install manifest declares Host Bundle and Web Client in the same pa
   assert.match(patch, /name: dsh-desktop-center/);
 });
 
-test('host exposes independent services and the expected authenticated read-only GET routes', async () => {
+test('host exposes independent services and the expected authenticated query and management routes', async () => {
   const services = new Map();
   const routes = new Map();
   const teardown = [];
@@ -37,7 +37,7 @@ test('host exposes independent services and the expected authenticated read-only
   assert.equal(services.get('skillsHub').version, 2);
   assert.equal(services.get('desktopCenter').version, 1);
   assert.deepEqual([...routes.keys()].sort(), Object.values(ROUTES).sort());
-  assert.ok([...routes.values()].every(r => r.methods.join() === 'GET' && r.requestBody === 'buffered'));
+  assert.ok([...routes.values()].every(r => r.methods.join() === (r.path === ROUTES.skills ? 'POST' : 'GET') && r.requestBody === 'buffered'));
   const health = await routes.get(ROUTES.health).fetch(new Request('https://example.com' + ROUTES.health));
   assert.equal(health.status, 200);
   assert.equal((await health.json()).data.version, VERSION);
@@ -113,4 +113,23 @@ test('client factory registers actual DSH main and sidebar panel using public sl
   assert.deepEqual(registrations.map(r => r.options.name).sort(), ['main', 'sidebar.panellist']);
   assert.equal(registrations.find(r => r.options.name === 'main').options.key, 'dsh-desktop-center');
   assert.equal(registrations.find(r => r.options.name === 'sidebar.panellist').options.id, 'dsh-desktop-center');
+});
+
+test('Skill management route validates requests before applying a single target operation', async () => {
+  const calls = [];
+  const route = makeRoutes({
+    manageSkill: async input => { calls.push(input); return { destination: '/test/skills/sample' }; },
+  }).find(route => route.path === ROUTES.skills);
+  const request = (data, headers = {}) => new Request('http://localhost' + route.path, {
+    method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(data),
+  });
+  const action = { action: 'install', target: 'qoder-cn', name: 'sample', source: '/test/source' };
+  assert.equal((await route.fetch(request(action, { 'sec-fetch-site': 'cross-site' }))).status, 403);
+  assert.equal((await route.fetch(request({ ...action, target: 'codex-desktop' }))).status, 400);
+  assert.equal((await route.fetch(request({ ...action, name: '../outside' }))).status, 400);
+  assert.equal((await route.fetch(request({ ...action, source: 'relative' }))).status, 400);
+  assert.deepEqual(calls, []);
+  const response = await route.fetch(request({ ...action, home: '/untrusted' }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(calls, [action]);
 });

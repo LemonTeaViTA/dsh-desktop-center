@@ -7,7 +7,8 @@ window.__ModuleLoader__.load({
     const React = require('react');
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
-    const CLIENT_VERSION = '0.3.0-rc.13';
+    const URL_MANAGE_SKILL = '/api/dsh-desktop-center/skills/manage';
+    const CLIENT_VERSION = '0.3.0-rc.14';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -117,7 +118,7 @@ window.__ModuleLoader__.load({
       EACCES: '没有读取权限',
       EPERM: '系统阻止了读取',
     };
-    function SkillsList({ desktops, search, showDesktop = true }) {
+    function SkillsList({ desktops, search, showDesktop = true, onRemove }) {
       const groups = desktops.map(desktop => ({
         desktop,
         skills: desktop.skills.filter(skill =>
@@ -144,6 +145,10 @@ window.__ModuleLoader__.load({
               !showDesktop && skill.scope === 'shared'
                 ? h('p', { className: 'sdc-muted' }, '共享 Skills 目录') : null,
               h('p', { className: 'sdc-muted' }, skill.description?.trim() || '暂无简介'),
+              onRemove && skill.scope === 'user' ? h('button', {
+                type: 'button', className: 'sdc-btn', onClick: () => onRemove(skill.directoryName),
+                'aria-label': '卸载 ' + skill.name,
+              }, '卸载') : null,
               incomplete || issues.length ? h('details', null,
                 h('summary', null, incomplete ? '部分内容无法比较' : '查看扫描异常'),
                 issues.length ? h('ul', null, ...issues.map(({ reason }, index) =>
@@ -208,6 +213,80 @@ window.__ModuleLoader__.load({
               entry.version ? h('span', { className: 'sdc-muted' }, entry.version) : null,
               typeof entry.enabled === 'boolean' ? h('span', { className: 'sdc-muted' }, entry.enabled ? '配置中已启用' : '配置中已停用') : null)))));
     }
+    const skillManagementErrors = {
+      CONFLICT: '目标目录存在同名 Skill，或该 Skill 正在处理。',
+      NOT_FOUND: '来源目录、SKILL.md 或目标 Skill 不存在。',
+      FORBIDDEN: 'DSH 无法写入该位置，请检查访问权限。',
+      INVALID_REQUEST: 'Skill 目录名须以英文字母或数字开头，可包含字母、数字、点、下划线和连字符。',
+      MANAGEMENT_FAILED: '操作失败。请检查目录及文件格式，或重新扫描核对结果。',
+    };
+
+    function DesktopSkills({ desktop, search, reload, enabled }) {
+      const [pending, setPending] = React.useState(null);
+      const [busy, setBusy] = React.useState(false);
+      const [feedback, setFeedback] = React.useState(null);
+      const confirmButton = React.useRef(null);
+      React.useEffect(() => {
+        if (pending) confirmButton.current?.focus();
+      }, [pending]);
+      const picker = window.__DSH_DIRECTORY_PICKER__;
+      const canManage = enabled && typeof picker?.pick === 'function';
+      const requestInstall = async () => {
+        setBusy(true);
+        setFeedback(null);
+        try {
+          const source = await picker.pick();
+          if (source) {
+            const name = source.split('/').filter(Boolean).pop() || '';
+            setPending({ action: 'install', name, source });
+          }
+        } catch {
+          setFeedback({ text: '无法打开本地目录选择器。', error: true });
+        } finally {
+          setBusy(false);
+        }
+      };
+      const submit = async () => {
+        setBusy(true);
+        setFeedback(null);
+        try {
+          const response = await fetch(URL_MANAGE_SKILL, {
+            method: 'POST', credentials: 'same-origin',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ ...pending, target: desktop.id }),
+          });
+          const result = await response.json();
+          if (!response.ok || !result.ok) throw new Error(skillManagementErrors[result.error] || skillManagementErrors.MANAGEMENT_FAILED);
+          setFeedback({ text: result.data.backup
+            ? '已卸载。恢复位置：' + result.data.backup
+            : '已安装。若 Qoder 中尚未显示，请刷新已安装列表。' });
+          setPending(null);
+          await reload();
+        } catch (error) {
+          setFeedback({ text: error.message, error: true });
+        } finally {
+          setBusy(false);
+        }
+      };
+      return h(React.Fragment, null,
+        canManage ? h('div', { className: 'sdc-skill-group' },
+          h('button', { type: 'button', className: 'sdc-btn', disabled: busy || Boolean(pending),
+            onClick: () => void requestInstall() }, '从本地目录安装 Skill'),
+          pending ? h('div', { className: 'sdc-alert' },
+            h('p', { className: 'sdc-path' }, (pending.action === 'install' ? '安装 ' : '卸载 ') + pending.name + ' · ' + desktop.label),
+            pending.source ? h('p', { className: 'sdc-path' }, '来源：' + pending.source) :
+              h('p', null, '卸载后可从该应用的恢复目录取回文件。'),
+            h('button', { type: 'button', className: 'sdc-btn', disabled: busy, ref: confirmButton, onClick: () => void submit() }, busy ? '处理中…' : '确认操作'),
+            h('button', { type: 'button', className: 'sdc-btn', disabled: busy, onClick: () => setPending(null) }, '取消')) : null,
+          feedback ? h('p', { className: 'sdc-path', role: feedback.error ? 'alert' : 'status' }, feedback.text) : null) : null,
+        h(SkillsList, {
+          desktops: [desktop], search, showDesktop: false,
+          onRemove: canManage && !busy && !pending ? name => {
+            setFeedback(null);
+            setPending({ action: 'uninstall', name });
+          } : undefined,
+        }));
+    }
     function Dashboard() {
       const [overview, setOverview] = React.useState(null);
       const [comparison, setComparison] = React.useState(null);
@@ -255,7 +334,7 @@ window.__ModuleLoader__.load({
               h('div', null, h('div', { className: 'sdc-eyebrow' }, 'DSH / DESKTOP CENTER'),
                 h('h1', null, 'Desktop Center'),
                 h('p', { className: 'sdc-muted' }, '统一查看桌面应用、Skills 与跨应用配置差异。')),
-              h(Pill, { label: 'v' + CLIENT_VERSION + ' · 只读', tone: 'good' })),
+              h(Pill, { label: 'v' + CLIENT_VERSION, tone: 'good' })),
             h('section', { className: 'sdc-stats', 'aria-label': '扫描统计' },
               ...[
                 [stat?.desktopCount ?? '—', 'Desktop 目标'],
@@ -282,7 +361,8 @@ window.__ModuleLoader__.load({
                   h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label)),
                 !query ? h(McpList, { mcp: desktop.mcp }) : null,
                 !query ? h(PluginList, { plugins: desktop.plugins, configured: desktop.id === 'codex-desktop', extensions: desktop.id === 'trae' || desktop.id === 'trae-cn' }) : null,
-                h(SkillsList, { desktops: [desktop], search: query, showDesktop: false })) :
+                h(DesktopSkills, { key: desktop.id, desktop, search: query, reload,
+                  enabled: overview.platform === 'darwin' && (desktop.id === 'qoder-global' || desktop.id === 'qoder-cn') })) :
             tab === 'desktops' ?
               h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
                 ...matching.map(d => h(Card, { key: d.id, desktop: d, onOpen: () => { setDesktopId(d.id); setSearch(''); } })),
@@ -293,7 +373,7 @@ window.__ModuleLoader__.load({
                 tab === 'diff' ? h(CompareTable, { rows: comparison?.matrix || [], desktops, search: query }) :
                 h(DiagnosticTable, { desktops, search: query })),
             h('footer', { className: 'sdc-foot' },
-              '当前版本不会进行安装、配置同步、签到或账号操作。目录存在不代表应用正在运行或已经登录。',
+              '应用和 Skill 状态来自本机扫描。',
               overview ? h('span', null, ' 最近扫描：' + new Date(overview.scannedAt).toLocaleString()) : null))));
     }
     function SidebarIcon({ size = 18 }) {

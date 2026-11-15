@@ -50,3 +50,9 @@ export interface DesktopCenterServiceV1 {
   overview(): Promise<DesktopCenterOverviewV1>;
   comparison(): ReturnType<SkillsHubServiceV2['compare']>;
 }
+
+export type SkillManagementTarget = 'qoder-global' | 'qoder-cn';
+export type SkillManagementRequest =
+  | { action: 'install'; target: SkillManagementTarget; name: string; source: string }
+  | { action: 'uninstall'; target: SkillManagementTarget; name: string };
+export type SkillManagementResult = { destination: string; backup?: string };

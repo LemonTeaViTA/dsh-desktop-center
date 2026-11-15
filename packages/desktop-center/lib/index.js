@@ -10,13 +10,16 @@ import { join } from 'node:path';
 import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readCodexPlugins, readTraeExtensions } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
+import { isSkillManagementRequest, manageSkill } from './skill-management.js';
+
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.13';
+export const VERSION = '0.3.0-rc.14';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
   health: '/api/dsh-desktop-center/health',
+  skills: '/api/dsh-desktop-center/skills/manage',
 });
 
 const noCache = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' };
@@ -80,14 +83,16 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
       };
     },
     comparison: () => skillsHub.compare(),
+    manageSkill(input) {
+      if (platform !== 'darwin') throw Object.assign(new Error('Unsupported platform'), { code: 'UNSUPPORTED_PLATFORM' });
+      return manageSkill({ ...input, home });
+    },
   });
 }
 
-/** A fetch route is registered only through DSH's authenticated Connection.
- * The route is GET-only, with no filesystem, credentials, or mutation API.
- */
+/** Exact Connection Fetch routes are restricted to owner Peers by DSH. */
 export function makeRoutes(center) {
-  return [
+  const queries = [
     { path: ROUTES.health, get: () => ({ version: VERSION, readOnly: true }) },
     { path: ROUTES.overview, get: () => center.overview() },
     { path: ROUTES.comparison, get: () => center.comparison() },
@@ -107,6 +112,30 @@ export function makeRoutes(center) {
       }
     },
   }));
+  return [...queries, {
+    path: ROUTES.skills,
+    methods: ['POST'],
+    requestBody: 'buffered',
+    async fetch(request) {
+      if (request.method !== 'POST') return json({ ok: false, error: 'METHOD_NOT_ALLOWED' }, 405);
+      if (request.headers.get('sec-fetch-site') === 'cross-site') return json({ ok: false, error: 'FORBIDDEN' }, 403);
+      if (request.headers.get('content-type')?.split(';')[0].trim() !== 'application/json') {
+        return json({ ok: false, error: 'INVALID_REQUEST' }, 415);
+      }
+      const body = await request.json().catch(() => null);
+      if (!body || !isSkillManagementRequest(body)) return json({ ok: false, error: 'INVALID_REQUEST' }, 400);
+      const { action, target, name, source } = body;
+      try {
+        return json({ ok: true, data: await center.manageSkill({ action, target, name, source }) });
+      } catch (error) {
+        if (error.code === 'SKILL_EXISTS' || error.code === 'EEXIST') return json({ ok: false, error: 'CONFLICT' }, 409);
+        if (error.code === 'ENOENT') return json({ ok: false, error: 'NOT_FOUND' }, 404);
+        if (error.code === 'EPERM' || error.code === 'EACCES') return json({ ok: false, error: 'FORBIDDEN' }, 403);
+        if (error.code === 'UNSUPPORTED_PLATFORM') return json({ ok: false, error: 'UNSUPPORTED_PLATFORM' }, 400);
+        return json({ ok: false, error: 'MANAGEMENT_FAILED' }, 422);
+      }
+    },
+  }];
 }
 
 export function apply(ctx) {
