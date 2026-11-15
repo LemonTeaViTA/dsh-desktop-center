@@ -8,7 +8,7 @@ window.__ModuleLoader__.load({
     const h = React.createElement;
     const PAGE_ID = 'dsh-desktop-center';
     const URL_MANAGE_SKILL = '/api/dsh-desktop-center/skills/manage';
-    const CLIENT_VERSION = '0.3.0-rc.14';
+    const CLIENT_VERSION = '0.3.0-rc.15';
     const URL_OVERVIEW = '/api/dsh-desktop-center/overview';
     const URL_COMPARE = '/api/dsh-desktop-center/comparison';
     const CSS = `
@@ -56,6 +56,7 @@ window.__ModuleLoader__.load({
       .sdc-skill-item details{margin-top:6px;font-size:12px}
       .sdc-skill-item summary{width:fit-content;cursor:pointer}
       .sdc-skill-item details ul{margin:6px 0 0;padding-inline-start:20px}
+      .sdc-batch-target{display:inline-flex;align-items:center;gap:6px;margin-inline-end:16px}
       .sdc-scroll{max-width:100%;overflow:auto}.sdc-table{width:100%;border-collapse:collapse;text-align:left;font-size:12px;min-width:630px}
       .sdc-table th{font-size:11px;white-space:nowrap;opacity:.62;font-weight:650}.sdc-table td,.sdc-table th{padding:12px 15px;border-bottom:1px solid color-mix(in srgb,currentColor 8%,transparent)}
       .sdc-table tr:last-child td{border-bottom:0}.sdc-table td:first-child{font-weight:610}
@@ -221,27 +222,57 @@ window.__ModuleLoader__.load({
       MANAGEMENT_FAILED: '操作失败。请检查目录及文件格式，或重新扫描核对结果。',
     };
 
-    function DesktopSkills({ desktop, search, reload, enabled }) {
+    const managedSkillTargets = new Set(['qoder-global', 'qoder-cn']);
+    const hasLocalSkill = (desktop, name) => desktop.skills.some(skill =>
+      skill.scope === 'user' && skill.directoryName === name);
+
+    async function submitSkillOperation(operation, target) {
+      try {
+        const response = await fetch(URL_MANAGE_SKILL, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ ...operation, target: target.id }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) {
+          return { target, error: skillManagementErrors[result.error] || skillManagementErrors.MANAGEMENT_FAILED };
+        }
+        return { target, backup: result.data.backup };
+      } catch {
+        return { target, error: '未收到操作结果，请重新扫描核对后再重试。', uncertain: true };
+      }
+    }
+
+    function DesktopSkills({ desktops, search, reload, enabled, batch = false }) {
       const [pending, setPending] = React.useState(null);
       const [busy, setBusy] = React.useState(false);
       const [feedback, setFeedback] = React.useState(null);
+      const [results, setResults] = React.useState([]);
+      const [removeName, setRemoveName] = React.useState('');
       const confirmButton = React.useRef(null);
       React.useEffect(() => {
         if (pending) confirmButton.current?.focus();
       }, [pending]);
       const picker = window.__DSH_DIRECTORY_PICKER__;
-      const canManage = enabled && typeof picker?.pick === 'function';
+      const targets = desktops.filter(desktop => managedSkillTargets.has(desktop.id));
+      const canManage = enabled && typeof picker?.pick === 'function' && targets.length > 0;
+      const localNames = [...new Set(targets.flatMap(target =>
+        target.skills.filter(skill => skill.scope === 'user').map(skill => skill.directoryName)))].sort();
+
+      const prepare = (operation) => {
+        setFeedback(null);
+        setResults([]);
+        const eligible = targets.filter(target => operation.action === 'install' || hasLocalSkill(target, operation.name));
+        if (eligible.length) setPending({ operation, targets: eligible, selected: eligible });
+      };
       const requestInstall = async () => {
         setBusy(true);
         setFeedback(null);
         try {
           const source = await picker.pick();
-          if (source) {
-            const name = source.split('/').filter(Boolean).pop() || '';
-            setPending({ action: 'install', name, source });
-          }
+          if (source) prepare({ action: 'install', name: source.split('/').filter(Boolean).pop() || '', source });
         } catch {
-          setFeedback({ text: '无法打开本地目录选择器。', error: true });
+          setFeedback('无法打开本地目录选择器。');
         } finally {
           setBusy(false);
         }
@@ -249,42 +280,59 @@ window.__ModuleLoader__.load({
       const submit = async () => {
         setBusy(true);
         setFeedback(null);
+        const attempted = await Promise.all(pending.selected.map(target => submitSkillOperation(pending.operation, target)));
+        setResults(previous => [
+          ...previous.filter(result => !attempted.some(next => next.target.id === result.target.id)),
+          ...attempted,
+        ]);
+        const retry = attempted.filter(result => result.error && !result.uncertain).map(result => result.target);
+        setPending(retry.length ? { operation: pending.operation, targets: retry, selected: retry } : null);
         try {
-          const response = await fetch(URL_MANAGE_SKILL, {
-            method: 'POST', credentials: 'same-origin',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ ...pending, target: desktop.id }),
-          });
-          const result = await response.json();
-          if (!response.ok || !result.ok) throw new Error(skillManagementErrors[result.error] || skillManagementErrors.MANAGEMENT_FAILED);
-          setFeedback({ text: result.data.backup
-            ? '已卸载。恢复位置：' + result.data.backup
-            : '已安装。若 Qoder 中尚未显示，请刷新已安装列表。' });
-          setPending(null);
           await reload();
-        } catch (error) {
-          setFeedback({ text: error.message, error: true });
         } finally {
           setBusy(false);
         }
       };
+      const toggleTarget = (target, checked) => setPending(current => ({
+        ...current,
+        selected: checked ? [...current.selected, target] : current.selected.filter(item => item.id !== target.id),
+      }));
+      const busyOrPending = busy || Boolean(pending);
       return h(React.Fragment, null,
-        canManage ? h('div', { className: 'sdc-skill-group' },
-          h('button', { type: 'button', className: 'sdc-btn', disabled: busy || Boolean(pending),
-            onClick: () => void requestInstall() }, '从本地目录安装 Skill'),
+        canManage ? h('section', { className: 'sdc-skill-group', 'aria-label': batch ? '批量管理 Skills' : '管理 Skills' },
+          batch ? h('h3', null, '批量管理 Skills') : null,
+          h('div', { className: 'sdc-actions' },
+            h('button', { type: 'button', className: 'sdc-btn',
+              disabled: busyOrPending, onClick: () => void requestInstall() }, '从本地目录安装 Skill'),
+            batch ? h(React.Fragment, null,
+              h('select', { className: 'sdc-field', 'aria-label': '选择要卸载的 Skill', value: removeName,
+                disabled: busyOrPending || localNames.length === 0, onChange: event => setRemoveName(event.target.value) },
+                h('option', { value: '' }, '选择要卸载的 Skill'),
+                ...localNames.map(name => h('option', { key: name, value: name }, name))),
+              h('button', { type: 'button', className: 'sdc-btn', disabled: busyOrPending || !localNames.includes(removeName),
+                onClick: () => prepare({ action: 'uninstall', name: removeName }) }, '批量卸载')) : null),
           pending ? h('div', { className: 'sdc-alert' },
-            h('p', { className: 'sdc-path' }, (pending.action === 'install' ? '安装 ' : '卸载 ') + pending.name + ' · ' + desktop.label),
-            pending.source ? h('p', { className: 'sdc-path' }, '来源：' + pending.source) :
-              h('p', null, '卸载后可从该应用的恢复目录取回文件。'),
-            h('button', { type: 'button', className: 'sdc-btn', disabled: busy, ref: confirmButton, onClick: () => void submit() }, busy ? '处理中…' : '确认操作'),
+            h('p', { className: 'sdc-path' }, (pending.operation.action === 'install' ? '安装 ' : '卸载 ') + pending.operation.name),
+            pending.operation.source ? h('p', { className: 'sdc-path' }, '来源：' + pending.operation.source) :
+              h('p', null, '卸载后可从各应用的恢复目录取回文件。'),
+            batch ? h('fieldset', { disabled: busy },
+              h('legend', null, '目标应用'),
+              ...pending.targets.map(target => h('label', { key: target.id, className: 'sdc-batch-target' },
+                h('input', { type: 'checkbox', checked: pending.selected.some(item => item.id === target.id),
+                  onChange: event => toggleTarget(target, event.target.checked) }), target.label))) :
+              h('p', null, pending.targets[0].label),
+            h('button', { type: 'button', className: 'sdc-btn', disabled: busy || !pending.selected.length,
+              ref: confirmButton, onClick: () => void submit() }, busy ? '处理中…' : results.length ? '重试失败目标' : '确认操作'),
             h('button', { type: 'button', className: 'sdc-btn', disabled: busy, onClick: () => setPending(null) }, '取消')) : null,
-          feedback ? h('p', { className: 'sdc-path', role: feedback.error ? 'alert' : 'status' }, feedback.text) : null) : null,
+          feedback ? h('p', { role: 'alert' }, feedback) : null,
+          results.length ? h('ul', { className: 'sdc-skill-list', role: 'status' }, ...results.map(result =>
+            h('li', { key: result.target.id, className: 'sdc-path' },
+              result.target.label + ' · ' + (result.error || (result.backup
+                ? '已卸载。恢复位置：' + result.backup
+                : '已安装。若 Qoder 中尚未显示，请刷新已安装列表。'))))) : null) : null,
         h(SkillsList, {
-          desktops: [desktop], search, showDesktop: false,
-          onRemove: canManage && !busy && !pending ? name => {
-            setFeedback(null);
-            setPending({ action: 'uninstall', name });
-          } : undefined,
+          desktops, search, showDesktop: batch,
+          onRemove: canManage && !busyOrPending && !batch ? name => prepare({ action: 'uninstall', name }) : undefined,
         }));
     }
     function Dashboard() {
@@ -361,15 +409,15 @@ window.__ModuleLoader__.load({
                   h('h2', { id: 'sdc-detail-heading', tabIndex: -1, ref: detailHeading }, desktop.label)),
                 !query ? h(McpList, { mcp: desktop.mcp }) : null,
                 !query ? h(PluginList, { plugins: desktop.plugins, configured: desktop.id === 'codex-desktop', extensions: desktop.id === 'trae' || desktop.id === 'trae-cn' }) : null,
-                h(DesktopSkills, { key: desktop.id, desktop, search: query, reload,
-                  enabled: overview.platform === 'darwin' && (desktop.id === 'qoder-global' || desktop.id === 'qoder-cn') })) :
+                h(DesktopSkills, { key: desktop.id, desktops: [desktop], search: query, reload,
+                  enabled: overview.platform === 'darwin' })) :
             tab === 'desktops' ?
               h('section', { className: 'sdc-grid', 'aria-label': '桌面应用列表' },
                 ...matching.map(d => h(Card, { key: d.id, desktop: d, onOpen: () => { setDesktopId(d.id); setSearch(''); } })),
                 ...(matching.length ? [] : [h(Empty, { key: 'empty', title: '没有匹配的应用', subtitle: '尝试其他关键词。' })])) :
               h('section', { className: 'sdc-pane' },
                 h('div', { className: 'sdc-pane-title' }, tab === 'skills' ? 'Skills 资源清单' : tab === 'diff' ? '跨 Desktop Skill 包对比' : '安全诊断'),
-                tab === 'skills' ? h(SkillsList, { desktops, search: query }) :
+                tab === 'skills' ? h(DesktopSkills, { desktops, search: query, reload, batch: true, enabled: overview.platform === 'darwin' }) :
                 tab === 'diff' ? h(CompareTable, { rows: comparison?.matrix || [], desktops, search: query }) :
                 h(DiagnosticTable, { desktops, search: query })),
             h('footer', { className: 'sdc-foot' },
