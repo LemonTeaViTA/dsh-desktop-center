@@ -57,5 +57,6 @@ export const DESKTOP_CATALOG = Object.freeze([
     appNames: ['Doubao.app'],
     bundleIds: { 'Doubao.app': 'com.bot.pc.doubao' },
     skillRoots: [],
+    note: '尚未验证豆包桌面版的 Skills、MCP 和用户插件本地清单来源。',
   },
 ]);

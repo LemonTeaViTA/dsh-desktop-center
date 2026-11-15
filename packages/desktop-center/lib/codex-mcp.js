@@ -29,6 +29,39 @@ export async function readZCodeMcp(home) {
   return fallback.status === 'missing' ? config : fallback;
 }
 
+export function readZCodePlugins(home) {
+  return readConfig(join(home, '.zcode', 'cli', 'plugins', 'installed_plugins.json'), text => {
+    const { version, plugins } = JSON.parse(text);
+    if (version !== 1 || !plugins || typeof plugins !== 'object') {
+      throw new Error('Unknown ZCode plugin registry format');
+    }
+    const entries = [];
+    if (Array.isArray(plugins)) {
+      for (const record of plugins) {
+        if (!record?.name || typeof record.name !== 'string' || typeof record.version !== 'string' ||
+            !['user', 'workspace'].includes(record.scope) || typeof record.installPath !== 'string') {
+          throw new Error('Invalid ZCode plugin record');
+        }
+        if (record.scope === 'user') entries.push({ name: record.name, version: record.version });
+      }
+    } else {
+      for (const [id, records] of Object.entries(plugins)) {
+        const separator = id.lastIndexOf('@');
+        if (separator < 1 || separator === id.length - 1) throw new Error('Invalid ZCode plugin ID');
+        for (const record of Array.isArray(records) ? records : [records]) {
+          if (typeof record?.installPath !== 'string' || !record.installPath) {
+            throw new Error('Invalid ZCode plugin record');
+          }
+          if (['local', 'project', 'workspace'].includes(record.scope)) continue;
+          const name = id.slice(0, separator);
+          entries.push(typeof record.version === 'string' ? { name, version: record.version } : { name });
+        }
+      }
+    }
+    return entries.sort((a, b) => a.name.localeCompare(b.name));
+  });
+}
+
 async function readMcpConfig(file, selectServers, getEnabled) {
   const { status, entries } = await readConfig(file, text => {
       const configured = selectServers(text) ?? {};

@@ -7,7 +7,7 @@
 import { createDesktopRegistry } from './registry/service.js';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readCodexPlugins, readTraeExtensions } from './codex-mcp.js';
+import { readCodexMcp, readQoderMcp, readQoderPlugins, readZCodeMcp, readZCodePlugins, readCodexPlugins, readTraeExtensions } from './codex-mcp.js';
 import { createSkillsHub } from './skills/service.js';
 
 import { isMcpManagementRequest, manageQoderMcp, qoderProfiles } from './mcp-management.js';
@@ -15,7 +15,7 @@ import { isSkillManagementRequest, manageSkill } from './skill-management.js';
 
 export const name = 'dsh-desktop-center';
 export const inject = ['connection'];
-export const VERSION = '0.3.0-rc.17';
+export const VERSION = '0.3.0-rc.18';
 export const ROUTES = Object.freeze({
   overview: '/api/dsh-desktop-center/overview',
   comparison: '/api/dsh-desktop-center/comparison',
@@ -61,7 +61,10 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
           ]);
           return { ...desktop, mcp, plugins };
         }
-        if (desktop.id === 'zcode') return { ...desktop, mcp: await readZCodeMcp(home) };
+        if (desktop.id === 'zcode') {
+          const [mcp, plugins] = await Promise.all([readZCodeMcp(home), readZCodePlugins(home)]);
+          return { ...desktop, mcp, plugins };
+        }
         const directory = qoderProfiles.get(desktop.id);
         if (!directory) return desktop;
         const [mcp, plugins] = await Promise.all([
@@ -80,7 +83,9 @@ export function createDesktopCenter({ registry = createDesktopRegistry(), hub, p
           desktopCount: inventory.desktops.length,
           installedAppCount: inventory.desktops.filter(item => item.appPaths.length > 0).length,
           skillOccurrences: inventory.desktops.reduce((sum, item) => sum + item.skills.length, 0),
-          diagnosticCount: inventory.desktops.reduce((sum, item) => sum + item.diagnostics.length, 0),
+          diagnosticCount: desktops.reduce((sum, item) => sum + item.diagnostics.length +
+            (item.skillRoots?.filter(root => root.error).length ?? 0) +
+            [item.mcp, item.plugins].filter(resource => resource?.status === 'unreadable').length, 0),
         },
       };
     },

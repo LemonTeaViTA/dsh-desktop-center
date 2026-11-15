@@ -83,6 +83,44 @@ test('ZCode uses shared MCP only when native settings contain no servers', async
   assert.deepEqual(await readZCodeMcp(home), { status: 'unreadable', servers: [] });
 });
 
+test('ZCode overview reads user plugin records and reports missing and damaged registries separately', async t => {
+  const home = await mkdtemp(join(tmpdir(), 'dsh-zcode-'));
+  t.after(() => rm(home, { recursive: true, force: true }));
+  const directory = join(home, '.zcode', 'cli', 'plugins');
+  await mkdir(join(directory, 'cache'), { recursive: true });
+  const registry = join(directory, 'installed_plugins.json');
+  const desktops = ['zcode', 'doubao'].map(id => ({
+    id, skills: [], appPaths: [], skillRoots: [], diagnostics: [],
+  }));
+  desktops[0].skillRoots.push({ path: '/private/fixture', exists: false, error: 'EACCES' });
+  const center = createDesktopCenter({ home, platform: 'darwin', hub: { inventory: async () => ({ desktops }) } });
+  const scan = () => center.overview();
+
+  const missing = await scan();
+  assert.deepEqual(missing.desktops[0].plugins, { status: 'missing', entries: [] });
+  assert.equal(missing.desktops[1].plugins, undefined);
+  assert.equal(missing.summary.diagnosticCount, 1);
+  await writeFile(registry, JSON.stringify({ version: 1, plugins: [] }));
+  assert.deepEqual((await scan()).desktops[0].plugins, { status: 'read', entries: [] });
+
+  const record = { id: 'sample@market', name: 'sample', marketplace: 'market', version: '1.2.3',
+    installPath: '/private/fixture-secret', installedAt: '2026-11-15T00:00:00Z', scope: 'user' };
+  const expected = { status: 'read', entries: [{ name: 'sample', version: '1.2.3' }] };
+  await writeFile(registry, JSON.stringify({ version: 1, plugins: [record, { ...record, scope: 'workspace' }] }));
+  const current = await scan();
+  assert.deepEqual(current.desktops[0].plugins, expected);
+  assert.doesNotMatch(JSON.stringify(current), /fixture-secret/);
+  await writeFile(registry, JSON.stringify({ version: 1, plugins: {
+    'sample@market': [{ ...record, scope: 'user' }, { ...record, scope: 'project' }],
+  } }));
+  assert.deepEqual((await scan()).desktops[0].plugins, expected);
+
+  await writeFile(registry, JSON.stringify({ version: 2, plugins: [] }));
+  const damaged = await scan();
+  assert.deepEqual(damaged.desktops[0].plugins, { status: 'unreadable', entries: [] });
+  assert.equal(damaged.summary.diagnosticCount, 2);
+});
+
 test('TRAE reads each edition user MCP and extension registry independently', async t => {
   const home = await mkdtemp(join(tmpdir(), 'dsh-trae-'));
   t.after(() => rm(home, { recursive: true, force: true }));

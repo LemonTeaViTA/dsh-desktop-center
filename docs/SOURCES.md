@@ -1,4 +1,4 @@
-# 调研依据与可复核出处（2026-11-14 更新）
+# 调研依据与可复核出处（2026-11-15 更新）
 
 以下为公开文档/项目的研究参考，**不是兼容性实机测试**：
 
@@ -20,7 +20,9 @@
    - https://github.com/yxdwind/agent-skill-manager
    - https://github.com/ccckfg/agent-skills-manager
 
-**不确定性**：WorkBuddy 的准确 Skills 目录、用户实际安装的 Trae 是否为 CN 版、Qoder CN/Global 在现有 Desktop 版本的 `.app` 名称和配置覆盖顺序尚未核实。其他插件功能不属于本项目范围。
+**ZCode 用户插件登记**：ZCode 将用户安装、内置和市场来源分开管理，参见 [ZCode 插件文档](https://zcode.z.ai/en/docs/plugin)。在已安装的 macOS ZCode 中核对随应用分发的 CLI 读取逻辑，确认用户登记文件为 `~/.zcode/cli/plugins/installed_plugins.json`，支持新版数组和旧版按插件 ID 索引的记录。只显示用户级记录中的名称和版本。内置插件、目录缓存和工作区登记不纳入此清单。
+
+**豆包**：本机识别到 `Doubao.app`（`com.bot.pc.doubao`）。[豆包技能接入指南](https://open.doubao.com/document/doubao-developer-guide/skill-integration-guide)和本机已知目录均未提供可复核的 Skills、MCP 或用户插件登记路径。继续显示应用发现，三种资源在扫描范围中标记为未覆盖。
 
 5. 外部设计 Skills（未复制代码或安装）:
    - 花叔 Design（MIT）：https://github.com/alchaincyf/huashu-design
