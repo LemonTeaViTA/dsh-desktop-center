@@ -16,5 +16,5 @@
 
 ## GitHub 交付
 
-- [ ] 核对发布提交的 GitHub Actions，并从公开 GitHub 插件子目录安装。
-- [ ] 发布 `v0.3.0`，上传 `dsh-desktop-center-0.3.0.tgz`，核对公开下载文件与本地包一致。
+- [x] [发布提交的 GitHub Actions](https://github.com/LemonTeaViTA/dsh-desktop-center/actions/runs/43710296951) 通过。通过 DSH CLI 从 GitHub 插件子目录安装并打开实际面板。
+- [x] [v0.3.0 Release](https://github.com/LemonTeaViTA/dsh-desktop-center/releases/tag/v0.3.0) 已发布。公开下载包与本地文件逐字节一致，SHA-256 为 `cfa9ffe3ce999d12a8faa45065a7dc8ebd66d3424b4b9a48dfa21a7c87c732e1`。
